@@ -1,34 +1,22 @@
 # PAIDPRO Solutions Website
 
-Basic static website for **PaidProSolutions.com**.
+Updated static website for PaidProSolutions.com.
 
-## Files
+Files:
+- index.html
+- styles.css
+- script.js
+- images/paidpro-icon.png
 
-- `index.html` — main website
-- `styles.css` — responsive site styling
-- `script.js` — mobile navigation and dynamic copyright year
-
-## Cloudflare Pages
-
-This site is intended to deploy directly from the repository root.
-
-Recommended Pages settings:
-
-- Framework preset: `None`
+Cloudflare Pages:
+- Framework preset: None
 - Build command: leave blank
-- Build output directory: `.`
-- Production branch: `main`
+- Build output directory: .
+- Production branch: main
 
-## Updating the site
+Wording note:
+The site is intentionally framed around mechanical design support, CAD automation,
+manufacturing workflows, and software development. It avoids presenting PAIDPRO Solutions
+as a licensed professional engineering firm or advertising professional engineering services.
 
-1. Edit the files locally.
-2. Commit and push changes to the `main` branch on GitHub.
-3. Cloudflare Pages should automatically build and deploy the update.
-
-## Before publishing publicly
-
-Review the wording and update the contact address if needed.
-
-Current contact link:
-
-`contact@paidprosolutions.com`
+This is a wording/risk-reduction measure, not legal advice.
