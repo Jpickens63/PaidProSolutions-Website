@@ -4,218 +4,264 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="PAIDPRO Solutions provides mechanical design support, CAD automation, manufacturing workflow tools, and custom software development." />
-  <title>PAIDPRO Solutions | Design, CAD Automation & Manufacturing Software</title>
+  <meta name="theme-color" content="#072f4f" />
+  <title>PAIDPRO Solutions | Design, Automation & Manufacturing Software</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="site-header">
+  <svg class="icon-library" aria-hidden="true">
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></symbol>
+    <symbol id="icon-cube" viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" /><path d="m4.3 7.7 7.7 4.4 7.7-4.4M12 12v9" /></symbol>
+    <symbol id="icon-automation" viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" /><circle cx="12" cy="12" r="4" /></symbol>
+    <symbol id="icon-flow" viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="6" rx="1" /><rect x="15" y="15" width="6" height="6" rx="1" /><path d="M9 6h4a3 3 0 0 1 3 3v6M13 18H9a3 3 0 0 1-3-3V9" /></symbol>
+    <symbol id="icon-code" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16" /></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></symbol>
+    <symbol id="icon-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z" /><path d="m3 12 9 5 9-5M3 16l9 5 9-5" /></symbol>
+    <symbol id="icon-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7" /></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" /></symbol>
+  </svg>
+
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="site-header" data-header>
     <div class="container nav-wrap">
       <a class="brand" href="#home" aria-label="PAIDPRO Solutions home">
-        <img class="brand-logo" src="images/paidpro-icon.png" alt="PAIDPRO Solutions logo" />
-        <span class="brand-text">
-          <strong>PAIDPRO</strong>
-          <span>Solutions</span>
-        </span>
+        <img class="brand-logo" src="images/paidpro-icon.png" alt="" width="58" height="58" />
+        <span class="brand-name"><strong>PAIDPRO</strong><span>SOLUTIONS</span></span>
       </a>
 
-      <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
+      <button class="menu-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false" aria-label="Open navigation">
+        <svg class="menu-open" aria-hidden="true"><use href="#icon-menu"></use></svg>
+        <svg class="menu-close" aria-hidden="true"><use href="#icon-close"></use></svg>
       </button>
 
-      <nav class="site-nav" aria-label="Primary navigation">
+      <nav class="site-nav" id="primary-navigation" aria-label="Primary navigation">
         <a href="#services">Services</a>
+        <a href="#process">Process</a>
         <a href="#paidpro">PAIDPRO</a>
         <a href="#about">About</a>
-        <a href="#contact" class="nav-cta">Contact</a>
+        <a href="#contact" class="nav-cta">Start a conversation</a>
       </nav>
     </div>
   </header>
 
-  <main>
+  <main id="main-content">
     <section id="home" class="hero">
+      <div class="hero-grid-lines" aria-hidden="true"></div>
       <div class="container hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">DESIGN • AUTOMATION • SOFTWARE</p>
-          <h1>Design and automation tools built for real manufacturing work.</h1>
-          <p class="hero-lead">
-            PAIDPRO Solutions combines mechanical design experience with CAD automation,
-            manufacturing data workflows, and custom software development.
-          </p>
+          <p class="eyebrow"><span></span> Design &bull; Automation &bull; Software</p>
+          <h1>Turn technical work into a <em>connected workflow.</em></h1>
+          <p class="hero-lead">PAIDPRO Solutions combines mechanical design experience, CAD automation, manufacturing data, and custom software to help technical teams work with less friction.</p>
 
           <div class="hero-actions">
-            <a class="button button-primary" href="#services">View Services</a>
-            <a class="button button-secondary" href="#paidpro">Explore PAIDPRO</a>
+            <a class="button button-primary" href="#services">Explore our services <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
+            <a class="button button-secondary" href="#contact">Discuss a project</a>
           </div>
 
-          <div class="hero-points">
-            <span>Mechanical Design Support</span>
-            <span>CAD Automation</span>
-            <span>Manufacturing Software</span>
+          <div class="hero-capabilities" aria-label="Core capabilities">
+            <div><svg aria-hidden="true"><use href="#icon-cube"></use></svg><span><strong>Design</strong>Built for production</span></div>
+            <div><svg aria-hidden="true"><use href="#icon-automation"></use></svg><span><strong>Automate</strong>Reduce repeat work</span></div>
+            <div><svg aria-hidden="true"><use href="#icon-flow"></use></svg><span><strong>Connect</strong>Move data forward</span></div>
           </div>
         </div>
 
-        <div class="hero-panel">
-          <div class="panel-top">
-            <span class="status-dot"></span>
-            <span>PAIDPRO Solutions</span>
+        <div class="hero-visual" aria-label="PAIDPRO connected workflow preview">
+          <div class="visual-orbit orbit-one" aria-hidden="true"></div>
+          <div class="visual-orbit orbit-two" aria-hidden="true"></div>
+          <div class="workflow-window">
+            <div class="window-header">
+              <div class="window-brand"><span class="window-mark">P</span><span>PAIDPRO Workflow</span></div>
+              <span class="live-label"><i></i> Connected</span>
+            </div>
+            <div class="window-body">
+              <div class="workflow-heading">
+                <div><span>PROJECT WORKSPACE</span><strong>Production release</strong></div>
+                <span class="release-tag">READY</span>
+              </div>
+
+              <div class="workflow-track" aria-hidden="true">
+                <div class="track-line"><span></span></div>
+                <div class="track-step complete"><i><svg><use href="#icon-check"></use></svg></i><span><strong>Design</strong>Reviewed</span></div>
+                <div class="track-step complete"><i><svg><use href="#icon-check"></use></svg></i><span><strong>Data</strong>Structured</span></div>
+                <div class="track-step active"><i>03</i><span><strong>Release</strong>Prepared</span></div>
+              </div>
+
+              <div class="workflow-metrics">
+                <div><span>CAD DATA</span><strong>Organized</strong><small><i></i> Current</small></div>
+                <div><span>BOM WORKFLOW</span><strong>Connected</strong><small><i></i> Ready</small></div>
+              </div>
+            </div>
           </div>
-          <div class="panel-body">
-            <div class="metric">
-              <span class="metric-label">Focus</span>
-              <strong>Design Efficiency</strong>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Approach</span>
-              <strong>Practical Automation</strong>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Built For</span>
-              <strong>Manufacturing Teams</strong>
-            </div>
-          </div>
+          <div class="floating-chip chip-cad"><svg aria-hidden="true"><use href="#icon-cube"></use></svg><span><strong>CAD</strong>Design data</span></div>
+          <div class="floating-chip chip-bom"><svg aria-hidden="true"><use href="#icon-database"></use></svg><span><strong>BOM</strong>Structured output</span></div>
         </div>
       </div>
+      <div class="container hero-note"><span>Built around real technical and manufacturing workflows</span><i aria-hidden="true"></i></div>
     </section>
 
-    <section id="services" class="section">
+    <section id="services" class="section services-section">
       <div class="container">
-        <div class="section-heading">
-          <p class="eyebrow">SERVICES</p>
-          <h2>Technical design and automation support when your team needs extra capacity.</h2>
-          <p>
-            Project-based support for manufacturers, product developers, and technical teams
-            that need experienced design, CAD, workflow, or software help.
-          </p>
+        <div class="section-intro split-heading">
+          <div><p class="eyebrow"><span></span> What we do</p><h2>Practical support across the technical workflow.</h2></div>
+          <p>Flexible project support for manufacturers, product developers, and technical teams that need experienced design, automation, workflow, or software help.</p>
         </div>
 
-        <div class="card-grid">
-          <article class="card">
-            <div class="card-number">01</div>
+        <div class="service-grid">
+          <article class="service-card featured-card">
+            <div class="card-topline"><span>01</span><i></i></div>
+            <div class="service-icon"><svg aria-hidden="true"><use href="#icon-cube"></use></svg></div>
             <h3>Mechanical Design Support</h3>
-            <p>
-              Concept development, assemblies, weldments, sheet metal, production drawings,
-              CAD modeling, and design-for-manufacturing support.
-            </p>
+            <p>Concept development, CAD modeling, assemblies, weldments, sheet metal, production drawings, and design-for-manufacturing support.</p>
+            <span class="card-link">From concept to production <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></span>
           </article>
 
-          <article class="card">
-            <div class="card-number">02</div>
+          <article class="service-card">
+            <div class="card-topline"><span>02</span><i></i></div>
+            <div class="service-icon"><svg aria-hidden="true"><use href="#icon-automation"></use></svg></div>
             <h3>CAD Automation</h3>
-            <p>
-              Custom macros, utilities, plug-ins, and workflow tools that reduce repetitive CAD
-              work and improve consistency.
-            </p>
+            <p>Custom macros, utilities, plug-ins, and tools that reduce repetitive CAD work and improve consistency.</p>
+            <span class="card-link">Simplify repeat work <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></span>
           </article>
 
-          <article class="card">
-            <div class="card-number">03</div>
-            <h3>Data & Workflow Integration</h3>
-            <p>
-              Tools that connect CAD information with BOMs, databases, PDM systems,
-              and manufacturing workflows.
-            </p>
+          <article class="service-card">
+            <div class="card-topline"><span>03</span><i></i></div>
+            <div class="service-icon"><svg aria-hidden="true"><use href="#icon-flow"></use></svg></div>
+            <h3>Data &amp; Workflow Integration</h3>
+            <p>Connect CAD information with BOMs, databases, PDM systems, and downstream manufacturing workflows.</p>
+            <span class="card-link">Connect the handoffs <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></span>
           </article>
 
-          <article class="card">
-            <div class="card-number">04</div>
+          <article class="service-card">
+            <div class="card-topline"><span>04</span><i></i></div>
+            <div class="service-icon"><svg aria-hidden="true"><use href="#icon-code"></use></svg></div>
             <h3>Custom Manufacturing Software</h3>
-            <p>
-              Purpose-built desktop, web, and workflow tools designed around the way your
-              technical and manufacturing teams actually work.
-            </p>
+            <p>Purpose-built desktop, web, and workflow tools shaped around the way your technical teams work.</p>
+            <span class="card-link">Build the right tool <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></span>
           </article>
         </div>
       </div>
     </section>
 
-    <section id="paidpro" class="section section-dark">
-      <div class="container product-grid">
-        <div>
-          <p class="eyebrow eyebrow-light">PAIDPRO</p>
-          <h2>A modular platform for CAD data and manufacturing workflows.</h2>
-          <p class="product-lead">
-            PAIDPRO is being developed as a connected set of tools for CAD data, BOM workflows,
-            manufacturing information, automation, and shop-floor support.
-          </p>
-
-          <ul class="feature-list">
-            <li><strong>CAD-connected workflows</strong><span>Reduce manual steps between design data and downstream manufacturing processes.</span></li>
-            <li><strong>BOM and data tools</strong><span>Organize, publish, and move technical information where it needs to go.</span></li>
-            <li><strong>Modular architecture</strong><span>Add capabilities as needed instead of forcing every workflow into one tool.</span></li>
-            <li><strong>Automation first</strong><span>Target repetitive technical work that consumes time without adding value.</span></li>
-          </ul>
+    <section id="process" class="section process-section">
+      <div class="container process-grid">
+        <div class="process-copy">
+          <p class="eyebrow eyebrow-light"><span></span> How we work</p>
+          <h2>A direct path from the problem to a working solution.</h2>
+          <p>Start with the real workflow, identify where time or information is being lost, and build only what moves the work forward.</p>
+          <a class="text-link" href="#contact">Tell us what is slowing you down <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
         </div>
 
-        <div class="product-window">
-          <div class="window-bar"><span></span><span></span><span></span></div>
-          <div class="window-content">
-            <div class="window-sidebar">
-              <div class="sidebar-title">PAIDPRO</div>
-              <div class="sidebar-item active">Dashboard</div>
-              <div class="sidebar-item">Design</div>
-              <div class="sidebar-item">BOM</div>
-              <div class="sidebar-item">Automation</div>
-              <div class="sidebar-item">Manufacturing</div>
+        <ol class="process-list">
+          <li><span>01</span><div><strong>Understand the work</strong><p>Map the current process, technical constraints, inputs, and desired output.</p></div></li>
+          <li><span>02</span><div><strong>Build around reality</strong><p>Shape the design or software around your team, tools, and production needs.</p></div></li>
+          <li><span>03</span><div><strong>Deliver a usable result</strong><p>Provide a practical solution that fits into the way the work gets done.</p></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="paidpro" class="section product-section">
+      <div class="container product-grid">
+        <div class="product-showcase">
+          <div class="product-frame">
+            <div class="product-frame-bar">
+              <div class="frame-dots"><i></i><i></i><i></i></div>
+              <span>PAIDPRO / TECHNICAL WORKSPACE</span>
+              <span class="frame-status"><i></i> ACTIVE</span>
             </div>
-            <div class="window-main">
-              <div class="window-main-title">Technical Workspace</div>
-              <div class="ui-row">
-                <div class="ui-card"><span>CAD</span><strong>Connected</strong></div>
-                <div class="ui-card"><span>Data</span><strong>Ready</strong></div>
-              </div>
-              <div class="ui-table">
-                <div><span>Project Data</span><span>Available</span></div>
-                <div><span>BOM Workflow</span><span>Ready</span></div>
-                <div><span>Automation</span><span>Configured</span></div>
+            <div class="product-frame-body">
+              <aside class="product-sidebar" aria-label="Product preview navigation">
+                <div class="product-logo">P</div>
+                <span class="selected"><svg aria-hidden="true"><use href="#icon-layers"></use></svg></span>
+                <span><svg aria-hidden="true"><use href="#icon-cube"></use></svg></span>
+                <span><svg aria-hidden="true"><use href="#icon-database"></use></svg></span>
+                <span><svg aria-hidden="true"><use href="#icon-automation"></use></svg></span>
+              </aside>
+              <div class="product-dashboard">
+                <div class="dashboard-title">
+                  <div><small>WORKSPACE</small><strong>Project overview</strong></div>
+                  <span class="preview-button">New workflow <b>+</b></span>
+                </div>
+                <div class="dashboard-cards">
+                  <div><span>DESIGN FILES</span><strong>Connected</strong><i class="bar bar-long"></i></div>
+                  <div><span>DATA STATUS</span><strong>Ready</strong><i class="bar bar-short"></i></div>
+                  <div><span>AUTOMATION</span><strong>Configured</strong><i class="bar bar-medium"></i></div>
+                </div>
+                <div class="dashboard-table">
+                  <div class="table-head"><span>Workflow</span><span>Stage</span><span>Status</span></div>
+                  <div><span><i class="file-icon">D</i> Design package</span><span>Review</span><b>Current</b></div>
+                  <div><span><i class="file-icon">B</i> BOM output</span><span>Publish</span><b>Ready</b></div>
+                  <div><span><i class="file-icon">M</i> Manufacturing data</span><span>Release</span><b>Prepared</b></div>
+                </div>
               </div>
             </div>
           </div>
+          <div class="showcase-tag"><svg aria-hidden="true"><use href="#icon-layers"></use></svg><span><strong>Modular by design</strong>Capabilities can grow with the workflow.</span></div>
+        </div>
+
+        <div class="product-copy">
+          <p class="eyebrow"><span></span> The PAIDPRO platform</p>
+          <h2>One connected foundation for technical data and manufacturing work.</h2>
+          <p class="product-lead">PAIDPRO is a modular software platform in development for CAD data, BOM workflows, automation, manufacturing information, and shop-floor support.</p>
+          <ul class="feature-list">
+            <li><i><svg aria-hidden="true"><use href="#icon-check"></use></svg></i><span><strong>CAD-connected workflows</strong>Reduce manual steps between design information and downstream processes.</span></li>
+            <li><i><svg aria-hidden="true"><use href="#icon-check"></use></svg></i><span><strong>BOM and data tools</strong>Organize, publish, and move technical information where it needs to go.</span></li>
+            <li><i><svg aria-hidden="true"><use href="#icon-check"></use></svg></i><span><strong>Focused automation</strong>Target repetitive work that consumes time without improving the result.</span></li>
+          </ul>
+          <a class="button button-dark" href="#contact">Ask about PAIDPRO <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
         </div>
       </div>
     </section>
 
-    <section id="about" class="section">
+    <section id="about" class="section about-section">
       <div class="container about-grid">
-        <div>
-          <p class="eyebrow">ABOUT</p>
-          <h2>Mechanical design experience applied to CAD, manufacturing, and software automation.</h2>
+        <div class="about-heading">
+          <p class="eyebrow"><span></span> About PAIDPRO Solutions</p>
+          <h2>Mechanical design thinking, applied to software and automation.</h2>
         </div>
         <div class="about-copy">
-          <p>
-            PAIDPRO Solutions focuses on the intersection of mechanical design, manufacturing,
-            CAD, workflow automation, and software development.
-          </p>
-          <p>
-            The goal is straightforward: build practical tools that reduce repetitive work,
-            improve data quality, and give technical teams more time for higher-value work.
-          </p>
+          <p class="about-lead">We work at the intersection of mechanical design, CAD, manufacturing, data, and software development.</p>
+          <p>The goal is clear: reduce repetitive work, improve the movement of technical information, and give teams more time for the work that needs their experience.</p>
+          <div class="about-values">
+            <span><i></i> Practical by design</span>
+            <span><i></i> Built for real workflows</span>
+            <span><i></i> Focused on usable results</span>
+          </div>
         </div>
       </div>
     </section>
 
-    <section id="contact" class="section contact-section">
-      <div class="container contact-box">
-        <div>
-          <p class="eyebrow">CONTACT</p>
-          <h2>Have a design, CAD automation, workflow, or manufacturing software project?</h2>
-          <p>Send a brief description of the problem, current workflow, and desired outcome.</p>
+    <section id="contact" class="contact-section">
+      <div class="container contact-card">
+        <div class="contact-pattern" aria-hidden="true"></div>
+        <div class="contact-copy">
+          <p class="eyebrow eyebrow-light"><span></span> Start a conversation</p>
+          <h2>What technical problem can we help you solve?</h2>
+          <p>Share the current workflow, what is slowing it down, and the result you want to reach.</p>
         </div>
-        <a class="button button-primary" href="mailto:contact@paidprosolutions.com">
-          contact@paidprosolutions.com
+        <a class="contact-action" href="mailto:contact@paidprosolutions.com">
+          <span><small>EMAIL PAIDPRO SOLUTIONS</small><strong>contact@paidprosolutions.com</strong></span>
+          <i><svg aria-hidden="true"><use href="#icon-arrow"></use></svg></i>
         </a>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-wrap">
-      <div>
-        <strong>PAIDPRO Solutions</strong>
-        <span>Mechanical Design Support • CAD Automation • Manufacturing Software</span>
-      </div>
-      <div>&copy; <span id="year"></span> PAIDPRO Solutions</div>
+    <div class="container footer-main">
+      <a class="brand footer-brand" href="#home" aria-label="Back to top">
+        <img class="brand-logo" src="images/paidpro-icon.png" alt="" width="58" height="58" />
+        <span class="brand-name"><strong>PAIDPRO</strong><span>SOLUTIONS</span></span>
+      </a>
+      <p>Mechanical design support, CAD automation, manufacturing workflows, and custom software.</p>
+      <a class="footer-email" href="mailto:contact@paidprosolutions.com">contact@paidprosolutions.com</a>
+    </div>
+    <div class="container footer-bottom">
+      <span>&copy; <span id="year"></span> PAIDPRO Solutions</span>
+      <span>Design &bull; Automate &bull; Connect</span>
     </div>
   </footer>
 
