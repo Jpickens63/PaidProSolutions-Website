@@ -59,3 +59,18 @@ a push to the Cloudflare Pages production branch is a separate deployment action
 
 Validation covers 320px–1920px layouts, image and anchor loading, mobile menu
 and keyboard behavior, reduced motion, and content/navigation without JavaScript.
+
+## Interactive browser examples
+
+- `lite-demo.html`: Client Lite preview with sample tasks, manual dates, a Time Card,
+  Project Gantt and reports. This browser example uses localStorage, not SQLite.
+- `task-manager.html`: a focused Task Manager with Task, Task Description,
+  Estimated Time (decimal hours), Priority and Due Date. Visitors can add multiple
+  tasks, edit, delete, search and sort them. It starts empty and saves to a separate
+  versioned browser-local storage key, `paidpro-task-manager-v1`.
+
+Both are linked from the PAIDPRO platform section. Neither example connects to
+the company server, sends visitor tasks to PAIDPRO, or requires sign-in. Data is
+specific to the browser/device and may be lost if browser storage is cleared.
+Storage failures are surfaced in the Task Manager instead of claiming a save.
+The demo is not a substitute for backed-up business records.
