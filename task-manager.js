@@ -1,6 +1,7 @@
 (() => {
   "use strict";
-  const storageKey = "paidpro-task-manager-v1";
+  if (!window.ClientLiteStore) return;
+  const sharedStore = window.ClientLiteStore;
   const priorities = { urgent: 0, high: 1, normal: 2, low: 3 };
   const priorityNames = { urgent: "Urgent", high: "High", normal: "Normal", low: "Low" };
   const byId = (id) => document.getElementById(id);
@@ -13,9 +14,108 @@
   let tasks = [];
   let editingId = null;
   let deletingId = null;
+  let tasksRevision = 0, editingRevision = 0, deletingRevision = 0;
   let toastTimeout;
   let storageWritable = true;
   let day = today();
+  const calendarKey = "paidpro-task-calendar-v1";
+  const calendar = { start: byId("plan-start"), regular: byId("regular-hours"), overtime: byId("overtime-hours"), excluded: byId("days-off") };
+  let schedule;
+  let pageOffset = 0;
+  let calendarWritable = true;
+  let calendarReady = false;
+  let lastPlanKey = null;
+  calendar.start.value = day;
+  function readCalendar(raw) {
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (s.version !== 1 || !validDate(s.start) || !Number.isFinite(s.regular) || s.regular < .01 || !Number.isFinite(s.overtime) || s.overtime < 0 || s.regular + s.overtime > 24 || !Array.isArray(s.weekdays) || !s.weekdays.length || s.weekdays.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || !Array.isArray(s.excluded) || s.excluded.length > 100 || s.excluded.some((d) => !validDate(d))) throw new Error("Invalid work calendar");
+    return s;
+  }
+  function setCalendar(s) {
+    if (!s) return;
+    ["start", "regular", "overtime"].forEach((key) => { calendar[key].value = s[key]; });
+    calendar.excluded.value = s.excluded.join(", ");
+    document.querySelectorAll(".working-days input").forEach((input) => { input.checked = s.weekdays.includes(Number(input.value)); });
+  }
+  try { setCalendar(readCalendar(localStorage.getItem(calendarKey))); }
+  catch { calendarWritable = false; byId("calendar-error").textContent = "Saved calendar could not be read. Default settings are used for this session; existing settings have not been overwritten."; byId("calendar-error").hidden = false; }
+
+  function calendarSettings() {
+    const s = { version: 1, start: calendar.start.value, regular: Number(calendar.regular.value), overtime: Number(calendar.overtime.value), weekdays: [...document.querySelectorAll(".working-days input:checked")].map((input) => Number(input.value)), excluded: calendar.excluded.value.split(",").map((d) => d.trim()).filter(Boolean) };
+    try { return readCalendar(JSON.stringify(s)); } catch { return null; }
+  }
+  function formatDate(value) { return value ? dateFormat.format(new Date(`${value}T12:00:00`)) : "Not fully scheduled"; }
+  function recalculate() {
+    const settings = calendarSettings();
+    if (!settings) {
+      lastPlanKey = null;
+      schedule = null;
+      byId("calendar-error").textContent = "Use a valid start date, at least one working day, and total normal + extra hours of no more than 24 per day. Days off must be valid YYYY-MM-DD dates (up to 100).";
+      byId("calendar-error").hidden = false;
+      byId("plan-verdict").textContent = "Check your work calendar.";
+      byId("plan-explanation").textContent = "A schedule and export are unavailable until these settings are valid.";
+      byId("schedule-results").hidden = true;
+      byId("export-excel").disabled = true;
+      ["required-overtime", "planned-overtime", "late-tasks"].forEach((id) => { byId(id).textContent = "—"; });
+      return;
+    }
+    if (calendarReady && calendarWritable) byId("calendar-error").hidden = true;
+    const key = JSON.stringify([tasks, settings, today()]);
+    if (key === lastPlanKey) return;
+    lastPlanKey = key;
+    const planningTasks = tasks.map(task => ({ ...task, estimatedHours: task.hours, hours: Math.max(0, Math.round((task.hours - (task.chargedHours || 0)) * 100) / 100) })).filter(task => task.hours > 0);
+    schedule = PaidproScheduler.plan(planningTasks, settings, today());
+    byId("export-excel").disabled = !planningTasks.length;
+    byId("schedule-results").hidden = !planningTasks.length;
+    byId("required-overtime").textContent = `${numberFormat.format(schedule.requiredOvertime)} hr`;
+    byId("planned-overtime").textContent = `${numberFormat.format(schedule.plannedOvertime)} hr`;
+    byId("late-tasks").textContent = schedule.lateCount;
+    byId("plan-outcome").className = `plan-outcome ${schedule.lateCount || schedule.beyondCount || schedule.unplannedHours ? "risk" : schedule.requiredOvertime ? "extra" : "fits"}`;
+    byId("plan-verdict").textContent = !tasks.length ? "Add tasks to see your schedule." : schedule.lateCount ? "Not all deadlines can be met with this calendar." : schedule.beyondCount ? "Some deadlines are beyond the planning window." : schedule.requiredOvertime ? "Overtime is needed to meet these deadlines." : "Your tasks fit within normal working hours.";
+    byId("plan-explanation").textContent = !tasks.length ? "Start with your normal workweek, then enter each task’s remaining hours and due date." : `${numberFormat.format(schedule.requiredOvertime)} extra hours are needed across reachable deadlines; this plan uses ${numberFormat.format(schedule.plannedOvertime)} hr under your daily limit. ${schedule.lateCount ? `${schedule.lateCount} task(s) are overdue, before your plan start, or short of capacity by their deadline. ` : ""}${schedule.start !== settings.start ? `Plan starts today (${formatDate(schedule.start)}), not in the past. ` : ""}${schedule.beyondCount ? `${schedule.beyondCount} task(s) need a later planning window. ` : ""}${schedule.unplannedHours ? `${numberFormat.format(schedule.unplannedHours)} hr cannot fit in the two-year window.` : ""}`;
+    if (tasks.length && !planningTasks.length) {
+      byId("plan-verdict").textContent = "All estimated hours have been recorded.";
+      byId("plan-explanation").textContent = "Mark finished tasks complete in Time Card, or increase their estimates if work remains. Recorded time is never treated as a completion approval.";
+    }
+    byId("schedule-limit").textContent = `The planner looks ahead up to ${formatDate(schedule.windowEnd)}. Deadlines are inclusive (end of day). Days off and unchecked weekdays have no capacity. Hover or focus a day cell for its hours.`;
+    pageOffset = Math.min(pageOffset, Math.max(0, Math.ceil(schedule.days.length / 28) * 28 - 28));
+    renderSchedule();
+  }
+  function renderSchedule() {
+    if (!schedule) return;
+    const days = schedule.days.slice(pageOffset, pageOffset + 28);
+    byId("date-range").textContent = `${formatDate(days[0].date)} – ${formatDate(days.at(-1).date)}`;
+    byId("previous-days").disabled = pageOffset === 0;
+    byId("next-days").disabled = pageOffset + 28 >= schedule.days.length;
+    const head = document.createElement("tr");
+    ["Task / scheduler order", "Start → finish", "Result"].forEach((label) => { const th = document.createElement("th"); th.scope = "col"; th.textContent = label; head.append(th); });
+    days.forEach((d) => { const th = document.createElement("th"); th.scope = "col"; th.className = `day-heading ${d.working ? "" : "off-day"} ${d.date === today() ? "current-day" : ""}`; th.textContent = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(`${d.date}T12:00:00`)); const name = document.createElement("small"); name.textContent = new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(new Date(`${d.date}T12:00:00`)); th.append(name); head.append(th); });
+    byId("schedule-head").replaceChildren(head);
+    const body = document.createDocumentFragment();
+    schedule.tasks.forEach((task) => {
+      const tr = document.createElement("tr");
+      const name = cell(`${task.order}. ${task.name}`, "Task", "schedule-name");
+      name.title = `${task.description || task.name} · ${numberFormat.format(task.hours)} hr · ${priorityNames[task.priority]} · due ${formatDate(task.due)}`;
+      const dates = cell(`${task.start ? formatDate(task.start) : "—"} → ${formatDate(task.finish)}`, "Dates", "schedule-dates");
+      const status = cell(task.status, "Result", task.shortageHours || task.unplannedHours ? "schedule-risk" : "schedule-status");
+      tr.append(name, dates, status);
+      days.forEach((d) => {
+        const a = task.allocations.find((item) => item.date === d.date);
+        const td = cell(a ? numberFormat.format(a.regular + a.overtime) : "", d.date, `day-cell ${d.working ? "" : "off-day"} ${d.date === today() ? "current-day" : ""}`);
+        if (a) { td.classList.add(d.date > task.due ? "late-work" : a.overtime ? "extra-work" : "normal-work"); td.title = `${task.name} · ${formatDate(d.date)}: ${numberFormat.format(a.regular)} normal + ${numberFormat.format(a.overtime)} overtime hr`; td.setAttribute("tabindex", "0"); td.setAttribute("aria-label", td.title); }
+        tr.append(td);
+      });
+      body.append(tr);
+    });
+    byId("schedule-rows").replaceChildren(body);
+    const foot = document.createDocumentFragment();
+    [["Normal hours planned", "regular"], ["Normal hours available", "regularCapacity"], ["Overtime planned", "overtime"], ["Extra hours limit", "overtimeCapacity"]].forEach(([label, key]) => {
+      const tr = document.createElement("tr"); const th = document.createElement("th"); th.scope = "row"; th.colSpan = 3; th.textContent = label; tr.append(th);
+      days.forEach((d) => tr.append(cell(numberFormat.format(d[key]), label, `day-cell ${key === "overtime" && d[key] ? "extra-work" : ""}`))); foot.append(tr);
+    });
+    byId("schedule-totals").replaceChildren(foot);
+  }
 
   function today() {
     const now = new Date();
@@ -38,16 +138,6 @@
       Number.isFinite(task.createdAt) && task.createdAt >= 0;
   }
 
-  function readTasks(raw) {
-    if (raw === null) return [];
-    const saved = JSON.parse(raw);
-    if (!saved || saved.version !== 1 || !Array.isArray(saved.tasks) || saved.tasks.length > 500 ||
-        !saved.tasks.every(validTask) || new Set(saved.tasks.map((task) => task.id)).size !== saved.tasks.length) {
-      throw new Error("Invalid saved demo data");
-    }
-    return saved.tasks.map(({ id, name, description, hours, priority, due, createdAt }) => ({ id, name, description, hours, priority, due, createdAt }));
-  }
-
   function storageWarning(message) {
     const warning = byId("storage-warning");
     warning.textContent = message;
@@ -56,23 +146,26 @@
     byId("save-state").parentElement.classList.add("unsaved");
   }
 
-  try {
-    tasks = readTasks(localStorage.getItem(storageKey));
-  } catch {
-    storageWritable = false;
-    storageWarning("Saved tasks could not be loaded, or browser storage is blocked. Existing saved data has not been overwritten. New changes are kept only for this session.");
+  function reloadTasks() {
+    const snapshot = sharedStore.get();
+    tasks = sharedStore.managerTasks(snapshot);
+    tasksRevision = snapshot.revision;
   }
+  reloadTasks();
+  storageWritable = sharedStore.writable();
+  if (sharedStore.warning()) storageWarning(sharedStore.warning());
 
-  function persist() {
-    if (!storageWritable) return false;
+  function persist(expectedRevision = tasksRevision) {
     try {
-      localStorage.setItem(storageKey, JSON.stringify({ version: 1, tasks }));
-      byId("save-state").textContent = "Saved on this device";
-      return true;
-    } catch {
-      storageWritable = false;
-      storageWarning("Your browser could not save these changes. They are kept only for this session and will be lost when you reload or close the page.");
-      return false;
+      const saved = sharedStore.saveManagerTasks(tasks, expectedRevision);
+      storageWritable = saved;
+      if (saved) byId("save-state").textContent = "Saved on this device";
+      else storageWarning(sharedStore.warning());
+      return saved;
+    } catch (error) {
+      reloadTasks();
+      announce(error.message);
+      return null;
     }
   }
 
@@ -114,8 +207,10 @@
     day = today();
     const query = byId("search-tasks").value.trim().toLocaleLowerCase();
     const sort = byId("sort-tasks").value;
+    recalculate();
     const visible = tasks.filter((task) => `${task.name} ${task.description}`.toLocaleLowerCase().includes(query));
     visible.sort((a, b) => {
+      if (sort === "schedule" && schedule) return (schedule.tasks.find((t) => t.id === a.id)?.order || Number.MAX_SAFE_INTEGER) - (schedule.tasks.find((t) => t.id === b.id)?.order || Number.MAX_SAFE_INTEGER);
       if (sort === "priority") return priorities[a.priority] - priorities[b.priority] || a.due.localeCompare(b.due) || a.createdAt - b.createdAt;
       if (sort === "newest") return b.createdAt - a.createdAt;
       if (sort === "name") return a.name.localeCompare(b.name) || a.due.localeCompare(b.due);
@@ -188,6 +283,7 @@
 
   function editTask(task) {
     editingId = task.id;
+    editingRevision = tasksRevision;
     Object.entries(fields).forEach(([key, field]) => { field.value = task[key]; });
     formError("");
     byId("form-heading").textContent = "Edit task";
@@ -222,7 +318,12 @@
     const wasEditing = Boolean(editingId);
     if (wasEditing) tasks = tasks.map((item) => item.id === editingId ? task : item);
     else tasks.push(task);
-    const saved = persist();
+    const saved = persist(wasEditing ? editingRevision : tasksRevision);
+    if (saved === null) {
+      formError("Workspace changed or the update could not be saved. Cancel and reopen the task to review its latest details, or retry adding your task.");
+      render();
+      return;
+    }
     resetEditor();
     byId("search-tasks").value = "";
     render();
@@ -238,6 +339,7 @@
     if (button.dataset.action === "edit") editTask(task);
     else {
       deletingId = task.id;
+      deletingRevision = tasksRevision;
       byId("delete-copy").textContent = task.name;
       dialog.showModal();
     }
@@ -245,11 +347,18 @@
 
   dialog.addEventListener("close", () => {
     if (dialog.returnValue === "delete" && deletingId) {
+      const active = sharedStore.get().active;
+      if (active?.category === "TASK" && active.task === deletingId) {
+        announce("Stop the Time Card timer before removing its task.");
+        deletingId = null; dialog.returnValue = ""; return;
+      }
       tasks = tasks.filter((task) => task.id !== deletingId);
-      if (editingId === deletingId) resetEditor();
-      const saved = persist();
+      const saved = persist(deletingRevision);
       render();
-      announce(`Task deleted${saved ? "." : " for this session only."}`);
+      if (saved !== null) {
+        if (editingId === deletingId) resetEditor();
+        announce(`Task removed; recorded time remains in Reports${saved ? "." : " for this session only."}`);
+      }
       fields.name.focus();
     }
     deletingId = null;
@@ -259,20 +368,38 @@
   byId("search-tasks").addEventListener("input", render);
   byId("sort-tasks").addEventListener("change", render);
   byId("clear-search").addEventListener("click", () => { byId("search-tasks").value = ""; render(); byId("search-tasks").focus(); });
+  byId("calendar-form").addEventListener("submit", (event) => event.preventDefault());
+  byId("calendar-form").addEventListener("change", () => {
+    calendarReady = true; pageOffset = 0;
+    const s = calendarSettings();
+    if (s && calendarWritable) {
+      try { localStorage.setItem(calendarKey, JSON.stringify(s)); }
+      catch { calendarWritable = false; byId("calendar-error").textContent = "Calendar changes are kept only for this session because browser storage is unavailable."; byId("calendar-error").hidden = false; }
+    }
+    render();
+  });
+  byId("previous-days").addEventListener("click", () => { pageOffset = Math.max(0, pageOffset - 28); renderSchedule(); });
+  byId("next-days").addEventListener("click", () => { pageOffset += 28; renderSchedule(); });
+  byId("export-excel").addEventListener("click", async () => {
+    if (!schedule || !tasks.length) return;
+    const button = byId("export-excel"); button.disabled = true; button.textContent = "Preparing Excel…";
+    try { await PaidproExport.download(schedule, calendarSettings()); announce("Excel Gantt exported. Your browser task list is unchanged."); }
+    catch { announce("Excel export could not be prepared. Please retry; your tasks are unchanged."); }
+    finally { button.disabled = !schedule || !schedule.tasks.length; button.textContent = "Export Excel Gantt ↓"; }
+  });
   window.addEventListener("storage", (event) => {
-    if ((event.key === storageKey || event.key === null) && storageWritable) {
-      try {
-        tasks = readTasks(event.key === null ? null : event.newValue);
-        if (editingId && !tasks.some((task) => task.id === editingId)) resetEditor();
-        render();
-        announce("Task list updated from another tab.");
-      } catch {
-        storageWritable = false;
-        storageWarning("Another tab saved data this demo could not read. Changes here are now kept only for this session; the saved data has not been overwritten.");
-      }
+    if ((event.key === calendarKey || event.key === null) && calendarWritable) {
+      try { setCalendar(readCalendar(event.key === null ? null : event.newValue) || { start: today(), regular: 8, overtime: 2, weekdays: [1,2,3,4,5], excluded: [] }); render(); }
+      catch { calendarWritable = false; byId("calendar-error").textContent = "Calendar saved by another tab could not be read. Existing saved settings have not been overwritten."; byId("calendar-error").hidden = false; }
     }
   });
+  sharedStore.subscribe(() => {
+    reloadTasks();
+    if (sharedStore.warning()) storageWarning(sharedStore.warning());
+    if (editingId && !tasks.some(task => task.id === editingId)) resetEditor();
+    render();
+  });
   window.addEventListener("focus", () => { if (day !== today()) render(); });
-  setInterval(() => { if (day !== today()) render(); }, 60000);
+  setInterval(() => { if (day !== today() || sharedStore.get().active) { reloadTasks(); render(); } }, 60000);
   render();
 })();

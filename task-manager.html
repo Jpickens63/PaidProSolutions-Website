@@ -3,11 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Try PAIDPRO's simple Task Manager. Organize tasks, descriptions, estimated time, priorities and due dates in your browser.">
+  <meta name="description" content="Plan multiple tasks against deadlines and working hours. See required overtime and export your PAIDPRO Gantt schedule to Excel.">
   <meta name="theme-color" content="#061426">
-  <title>Task Manager | PAIDPRO Solutions</title>
+  <title>Task-Manager | PAIDPRO CLIENT LITE</title>
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" href="task-manager.css">
+  <script src="lite-module.js" defer></script>
+  <script src="task-scheduler.js" defer></script>
+  <script src="task-export.js" defer></script>
   <script src="task-manager.js" defer></script>
 </head>
 <body>
@@ -22,11 +25,12 @@
     </div>
   </header>
   <main class="shell" id="main">
+    <div class="module-heading"><div><p class="eyebrow">PAIDPRO CLIENT LITE / PLANNING</p><h1>Task-Manager</h1></div><p>One task list, shared with Time Card, Project Gantt and Reports. Plan deadlines and overtime, then export your Excel Gantt.</p></div>
     <section class="intro" aria-labelledby="page-title">
       <div>
         <p class="eyebrow">PAIDPRO / INTERACTIVE DEMO</p>
         <h1 id="page-title">A little structure.<br><span>A clearer day.</span></h1>
-        <p class="intro-copy">Meet the Task Manager. Capture the work, set your priorities, and keep the next deadline in view.</p>
+        <p class="intro-copy">Add your tasks. Set your working hours. See a deadline-driven schedule, whether overtime is needed, and a Gantt you can take into Excel.</p>
       </div>
       <div class="privacy-note">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>
@@ -59,13 +63,13 @@
           <p id="form-error" class="form-error" role="alert" hidden></p>
           <div class="form-actions"><button type="submit" class="button primary" id="save-task"><span id="save-label">Add task</span><span aria-hidden="true">＋</span></button><button type="button" class="button subtle" id="cancel-edit" hidden>Cancel edit</button></div>
         </form>
-        <p class="editor-note">All five fields are yours to edit. Nothing is automatically scheduled.</p>
+        <p class="editor-note">Estimates are total task hours. The planner subtracts time recorded in Time Card and recalculates remaining work. New tasks appear in Work under PERSONAL / General; edit their project and milestone there.</p>
       </section>
       <section class="panel task-panel" aria-labelledby="list-heading">
-        <div class="list-heading"><div><p class="eyebrow">YOUR WORKSPACE</p><h2 id="list-heading">Task Manager</h2></div><span class="local-badge"><i aria-hidden="true"></i><span id="save-state">Saved on this device</span></span></div>
+        <div class="list-heading"><div><p class="eyebrow">SHARED WORKSPACE</p><h2 id="list-heading">Your tasks</h2></div><span class="local-badge"><i aria-hidden="true"></i><span id="save-state">Saved on this device</span></span></div>
         <div class="list-tools">
           <div class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><label class="sr-only" for="search-tasks">Search tasks</label><input type="search" id="search-tasks" placeholder="Search tasks or descriptions" maxlength="200" autocomplete="off"></div>
-          <label class="sort-label" for="sort-tasks">Sort <select id="sort-tasks"><option value="due">Due date</option><option value="priority">Priority</option><option value="newest">Newest first</option><option value="name">Task name</option></select></label>
+          <label class="sort-label" for="sort-tasks">Sort <select id="sort-tasks"><option value="schedule">Scheduler order</option><option value="due">Due date</option><option value="priority">Priority</option><option value="newest">Newest first</option><option value="name">Task name</option></select></label>
         </div>
         <div class="table-wrap" id="task-list">
           <table id="task-table" hidden>
@@ -83,10 +87,30 @@
         <div class="list-footer"><span id="list-count">0 tasks</span><span>Edit any task to update its details.</span></div>
       </section>
     </div>
+    <section class="panel planner" aria-labelledby="planner-heading">
+      <div class="planner-heading"><div><p class="eyebrow">DEADLINES × CAPACITY</p><h2 id="planner-heading">Can the work fit?</h2></div><button class="button primary" id="export-excel" type="button" disabled>Export Excel Gantt <span aria-hidden="true">↓</span></button></div>
+      <form id="calendar-form" class="calendar-form">
+        <div><label for="plan-start">Plan from</label><input type="date" id="plan-start" required min="1900-01-01" max="9998-01-01"></div>
+        <div><label for="regular-hours">Normal hours / day</label><input type="number" id="regular-hours" value="8" min="0.01" max="24" step="0.01" required></div>
+        <div><label for="overtime-hours">Max extra hours / day</label><input type="number" id="overtime-hours" value="2" min="0" max="24" step="0.01" required></div>
+        <fieldset class="working-days"><legend>Working days</legend><label><input type="checkbox" value="1" checked>Mon</label><label><input type="checkbox" value="2" checked>Tue</label><label><input type="checkbox" value="3" checked>Wed</label><label><input type="checkbox" value="4" checked>Thu</label><label><input type="checkbox" value="5" checked>Fri</label><label><input type="checkbox" value="6">Sat</label><label><input type="checkbox" value="0">Sun</label></fieldset>
+        <div class="days-off"><label for="days-off">Days off (optional)</label><input type="text" id="days-off" maxlength="2500" placeholder="2026-12-25, 2027-01-01" aria-describedby="days-off-hint"><span id="days-off-hint">Separate YYYY-MM-DD dates with commas.</span></div>
+        <p id="calendar-error" class="form-error" role="alert" hidden></p>
+      </form>
+      <div class="plan-outcome" id="plan-outcome" role="status" aria-live="polite"><strong id="plan-verdict">Add tasks to see your schedule.</strong><p id="plan-explanation"></p></div>
+      <div class="plan-metrics"><div><span>Minimum extra hours needed</span><strong id="required-overtime">—</strong></div><div><span>Overtime in this plan</span><strong id="planned-overtime">—</strong></div><div><span>Missed / at-risk deadlines</span><strong id="late-tasks">—</strong></div></div>
+      <p class="planner-note">One person, all tasks ready to start, no dependencies. Earlier deadlines come first; priority breaks ties. Only necessary overtime is added, up to your daily limit. Past deadlines are flagged, never backdated; late work uses spare normal capacity after protecting remaining deadlines. This is a planning estimate, not overtime authorization.</p>
+      <div id="schedule-results" hidden>
+        <div class="gantt-toolbar"><div><h3>Your working plan</h3><p><span class="legend-dot regular-dot"></span>Normal hours <span class="legend-dot overtime-dot"></span>Includes overtime <span class="legend-dot late-dot"></span>Late work</p></div><div class="gantt-paging"><button type="button" class="button subtle" id="previous-days" aria-label="Previous 28 days">←</button><span id="date-range"></span><button type="button" class="button subtle" id="next-days" aria-label="Next 28 days">→</button></div></div>
+        <div class="gantt-scroll" tabindex="0" aria-label="Task Gantt, scroll horizontally for daily dates"><table class="schedule-table" id="schedule-table"><caption class="sr-only">Scheduled task dates, daily hours and normal/overtime capacity</caption><thead id="schedule-head"></thead><tbody id="schedule-rows"></tbody><tfoot id="schedule-totals"></tfoot></table></div>
+        <p class="planner-note" id="schedule-limit"></p>
+      </div>
+      <p class="export-note">Excel export gives you a calendar-style worksheet: task details on the left, dated Gantt columns on the right, plus daily capacity and overtime. It contains your entire plan, not just the visible 28 days. Exported dates are a snapshot; edit tasks here to reschedule.</p>
+    </section>
     <footer class="page-footer"><span>PAIDPRO Solutions · Design. Automate. Connect.</span><a href="index.html#contact">Explore what PAIDPRO can do for your team <span aria-hidden="true">↗</span></a></footer>
   </main>
   <dialog id="delete-dialog" aria-labelledby="delete-heading" aria-describedby="delete-copy">
-    <form method="dialog"><h2 id="delete-heading">Delete this task?</h2><p id="delete-copy"></p><p class="delete-note">This removes the task from your browser’s list. It cannot be undone.</p><div class="dialog-actions"><button class="button subtle" value="cancel" autofocus>Keep task</button><button class="button danger" id="confirm-delete" value="delete">Delete task</button></div></form>
+    <form method="dialog"><h2 id="delete-heading">Remove this task?</h2><p id="delete-copy"></p><p class="delete-note">This removes the task from the active lists. Its recorded time and Work Ticket history stay in Reports. Stop its timer before removing it.</p><div class="dialog-actions"><button class="button subtle" value="cancel" autofocus>Keep task</button><button class="button danger" id="confirm-delete" value="delete">Remove task</button></div></form>
   </dialog>
   <p class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></p>
   <noscript><p class="noscript">Please enable JavaScript to use the Task Manager demo. No tasks have been saved.</p></noscript>
