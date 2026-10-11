@@ -3,7 +3,7 @@ const menuButton = document.querySelector(".menu-toggle");
 const navigation = document.querySelector(".site-nav");
 const navigationLinks = navigation ? [...navigation.querySelectorAll("a")] : [];
 const year = document.getElementById("year");
-const desktopLayout = window.matchMedia("(min-width: 981px)");
+const desktopLayout = window.matchMedia("(min-width: 1101px)");
 
 if (year) year.textContent = new Date().getFullYear();
 

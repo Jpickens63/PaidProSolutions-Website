@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preload" href="images/industrial-workshop.webp" as="image" />
   <link rel="stylesheet" href="styles.css" />
-  <noscript><style>@media (max-width: 980px) { .site-header { position: relative; } .nav-wrap { flex-wrap: wrap; } .site-nav { position: static; display: flex; width: 100%; max-height: none; padding: 8px 0 20px; border: 0; box-shadow: none; } .menu-toggle { display: none; } .hero-inner { padding-top: 64px; } }</style></noscript>
+  <noscript><style>@media (max-width: 1100px) { .site-header { position: relative; } .nav-wrap { flex-wrap: wrap; } .site-nav { position: static; display: flex; width: 100%; max-height: none; padding: 8px 0 20px; border: 0; box-shadow: none; } .menu-toggle { display: none; } .hero-inner { padding-top: 64px; } }</style></noscript>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -21,6 +21,8 @@
     <symbol id="icon-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7" /></symbol>
     <symbol id="icon-code" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 3l-4 18" /></symbol>
     <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></symbol>
+    <symbol id="icon-tasks" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="19" rx="2" /><path d="m7 9 1.5 1.5L11 8M14 9h3M7 15h3M14 15h3" /></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></symbol>
     <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" /></symbol>
     <symbol id="icon-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 6 9 7 9-7" /></symbol>
     <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></symbol>
@@ -43,6 +45,7 @@
         <a href="#services">Services</a>
         <a href="#process">Our approach</a>
         <a href="#paidpro">PAIDPRO</a>
+        <a href="#time-management">Time Management</a>
         <a href="#about">About</a>
         <a class="vault-link" href="https://portal.paidprosolutions.com"><svg aria-hidden="true"><use href="#icon-lock"></use></svg> Client Vault</a>
         <a class="nav-cta" href="#contact">Let’s talk <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
@@ -137,8 +140,6 @@
             <li><svg aria-hidden="true"><use href="#icon-check"></use></svg><span><strong>Modular AI assistance</strong>Specialist agents coordinated around defined tasks.</span></li>
           </ul>
           <div class="platform-actions">
-            <a class="button button-primary" href="lite-demo.html">Try Client Lite <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
-            <a class="button button-ghost" href="task-manager.html">Try Task Manager <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
             <a class="button button-primary" href="#contact">Ask about PAIDPRO <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
             <a class="text-link" href="https://portal.paidprosolutions.com">Open Client Vault <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
           </div>
@@ -159,6 +160,32 @@
           </div>
           <p class="architecture-note">Platform architecture concept — capabilities are being developed in stages.</p>
         </div>
+      </div>
+    </section>
+
+    <section id="time-management" class="section time-management-section" aria-labelledby="time-management-title">
+      <div class="container">
+        <div class="section-heading">
+          <div><p class="eyebrow"><span class="eyebrow-line"></span> Try it for yourself</p><h2 id="time-management-title">Time Management</h2></div>
+          <p>Plan the work. Make time visible. Explore two hands-on PAIDPRO examples right in your browser — no installation or sign-in required.</p>
+        </div>
+        <div class="time-tools">
+          <article class="time-tool" aria-labelledby="task-manager-title">
+            <div class="time-tool-top"><div class="time-tool-icon"><svg aria-hidden="true"><use href="#icon-tasks"></use></svg></div><span class="time-tool-label">PLAN YOUR TASKS</span></div>
+            <h3 id="task-manager-title">Task Manager</h3>
+            <p>A simple place to capture what needs doing, how long it should take, and when it needs to be done.</p>
+            <ul class="time-tool-features"><li>Task names and descriptions</li><li>Estimated time, priority, and due date</li><li>Add, edit, search, and sort multiple tasks</li></ul>
+            <a class="button button-primary" href="task-manager.html">Try Task Manager <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
+          </article>
+          <article class="time-tool" aria-labelledby="client-lite-title">
+            <div class="time-tool-top"><div class="time-tool-icon"><svg aria-hidden="true"><use href="#icon-clock"></use></svg></div><span class="time-tool-label">TRACK YOUR TIME</span></div>
+            <h3 id="client-lite-title">PAIDPRO Client Lite</h3>
+            <p>Explore how planned tasks and recorded work come together in a preview of the PAIDPRO desktop experience.</p>
+            <ul class="time-tool-features"><li>Start and stop the Time Card timer</li><li>View manually dated tasks in Project Gantt</li><li>Explore weekly reports and planned Work Tickets</li></ul>
+            <a class="button button-ghost" href="lite-demo.html">Try Client Lite <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
+          </article>
+        </div>
+        <p class="time-management-note"><svg aria-hidden="true"><use href="#icon-lock"></use></svg><span>These are browser-local examples, separate from your company database. Data stays on this browser and device and can be lost if browser storage is cleared.</span></p>
       </div>
     </section>
 
@@ -218,7 +245,7 @@
   <footer class="site-footer">
     <div class="container footer-main">
       <div><a class="brand footer-brand" href="#home" aria-label="PAIDPRO Solutions — back to top"><img class="brand-logo" src="images/paidpro-emblem.webp" alt="" width="68" height="68" loading="lazy" /><span class="brand-name"><strong><span>PAID</span><span class="brand-blue">PRO</span></strong><span class="brand-subtitle">SOLUTIONS</span></span></a><p>Design. Automate. Connect.<br />Practical tools for smarter workflows.</p></div>
-      <nav class="footer-nav" aria-label="Footer navigation"><a href="#services">Our expertise</a><a href="#paidpro">The PAIDPRO platform</a><a href="#about">About PAIDPRO Solutions</a></nav>
+      <nav class="footer-nav" aria-label="Footer navigation"><a href="#services">Our expertise</a><a href="#paidpro">The PAIDPRO platform</a><a href="#time-management">Time Management</a><a href="#about">About PAIDPRO Solutions</a></nav>
       <div class="footer-contact"><a href="https://portal.paidprosolutions.com"><svg aria-hidden="true"><use href="#icon-lock"></use></svg> Client Vault <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a><a href="mailto:contact@paidprosolutions.com">contact@paidprosolutions.com</a></div>
     </div>
     <div class="container footer-bottom"><span>&copy; <span id="year">2026</span> PAIDPRO Solutions. All rights reserved.</span><a href="#home">Back to top <span aria-hidden="true">↑</span></a></div>

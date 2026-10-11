@@ -69,7 +69,9 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   tasks, edit, delete, search and sort them. It starts empty and saves to a separate
   versioned browser-local storage key, `paidpro-task-manager-v1`.
 
-Both are linked from the PAIDPRO platform section. Neither example connects to
+Both are linked from the dedicated Time Management section (`/#time-management`),
+accessible through the top menu or footer. Both demos link back to that section.
+Neither example connects to
 the company server, sends visitor tasks to PAIDPRO, or requires sign-in. Data is
 specific to the browser/device and may be lost if browser storage is cleared.
 Storage failures are surfaced in the Task Manager instead of claiming a save.

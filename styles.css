@@ -146,6 +146,22 @@ h2 { margin-top: 19px; font-size: clamp(32px, 3.2vw, 46px); font-weight: 650; li
 .module-image { width: 72px; height: 72px; object-fit: contain; }
 .architecture-note { margin: 20px; color: #849fb8; text-align: center; font-size: 10px; line-height: 1.7; }
 
+.time-management-section { background: radial-gradient(ellipse at 50% 0, #17466c30, transparent 65%), #061426; border-bottom: 1px solid var(--line); }
+.time-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.time-tool { display: flex; flex-direction: column; align-items: flex-start; padding: 30px; border: 1px solid #5d90b850; border-radius: 12px; background: linear-gradient(135deg, #12314c7a, #091b2e); box-shadow: inset 0 1px 0 #c5e5fb12; }
+.time-tool-top { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 16px; margin-bottom: 22px; }
+.time-tool-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 10px; background: #1d6fac25; color: #90d3ff; border: 1px solid #67b8ed4d; }
+.time-tool-icon svg { width: 25px; height: 25px; }
+.time-tool-label { color: #8fafc9; font: 10px/1.5 Consolas, monospace; letter-spacing: .12em; }
+.time-tool h3 { font-size: 27px; font-weight: 600; line-height: 1.25; margin-bottom: 13px; }
+.time-tool > p { font-size: 14px; max-width: 49ch; }
+.time-tool-features { list-style: none; padding: 0; margin: 23px 0 27px; display: grid; gap: 10px; color: #bad0e2; font-size: 13px; line-height: 1.6; }
+.time-tool-features li { padding-left: 17px; position: relative; }
+.time-tool-features li::before { content: ""; position: absolute; width: 4px; height: 4px; border-radius: 50%; left: 0; top: .65em; background: #68b9ef; }
+.time-tool .button { margin-top: auto; gap: 26px; font-size: 13px; }
+.time-management-note { display: flex; align-items: flex-start; gap: 10px; max-width: 900px; margin-top: 22px; color: #8facC5; font-size: 11px; line-height: 1.75; }
+.time-management-note svg { width: 15px; height: 15px; margin-top: 2px; color: #80badf; }
+
 .process-section { background: #061323; }
 .process-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); list-style: none; padding: 17px 0 0; margin: 0; gap: 50px; }
 .process-list li { position: relative; border-top: 1px solid #709cb75c; padding-top: 30px; }
@@ -220,7 +236,7 @@ h2 { margin-top: 19px; font-size: clamp(32px, 3.2vw, 46px); font-weight: 650; li
   .service-number { font-size: 8px; }
   .hero h1 { font-size: 51px; }
 }
-@media (max-width: 980px) {
+@media (max-width: 1100px) {
   html { scroll-padding-top: 91px; }
   .nav-wrap { min-height: 76px; }
   .menu-toggle { display: inline-flex; }
@@ -307,6 +323,11 @@ h2 { margin-top: 19px; font-size: clamp(32px, 3.2vw, 46px); font-weight: 650; li
   .platform-lead { font-size: 17px; margin-top: 23px; }
   .platform-actions { flex-direction: column; align-items: flex-start; gap: 20px; }
   .platform-actions .button { width: 100%; justify-content: space-between; }
+  .time-tools { grid-template-columns: 1fr; gap: 18px; }
+  .time-tool { padding: 24px; }
+  .time-tool-top { margin-bottom: 19px; }
+  .time-tool h3 { font-size: 25px; }
+  .time-tool .button { width: 100%; justify-content: space-between; }
   .architecture-heading { padding: 15px; font-size: 8px; }
   .architecture-core { padding-top: 22px; padding-bottom: 25px; }
   .architecture-core > img { width: 155px; height: 155px; }
