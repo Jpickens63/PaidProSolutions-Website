@@ -359,7 +359,7 @@
       render();
       if (saved !== null) {
         if (editingId === deletingId) resetEditor();
-        announce(`Task removed; recorded time remains in Reports${saved ? "." : " for this session only."}`);
+        announce(`Task removed; recorded time remains saved${saved ? "." : " for this session only."}`);
       }
       fields.name.focus();
     }

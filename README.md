@@ -63,24 +63,26 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
 ## PAIDPRO CLIENT LITE browser workspace
 
 - `lite-demo.html`: the single PAIDPRO CLIENT LITE shell. Work contains Time Card
-  and manually dated Project Gantt; Reports contains weekly hours and Work Tickets.
+  and manually dated Project Gantt. The Reports tab has been removed.
   This browser example uses localStorage, not SQLite.
   Project Gantt shows daily Available and Assigned hours above the dates. Capacity
   defaults to 8 hours Monday-Friday and shares the Task-Manager work calendar.
   Remaining estimated task hours are spread across manually entered working dates
   (rounded in hundredths, with no lost hours); this does not reschedule tasks.
   Non-working days have zero capacity and overloaded days are highlighted.
-  Reports opens on today's print-ready Daily Work Report, with scheduled task
-  rows, assigned hours and actual recorded hours kept distinct. Manual Work Ticket
-  items remain available in their existing report view, separate from actual work.
-  Historical task clockings remain visible even after completion/archival.
-  A running timer is identified and included only through the preview time.
-  Printing requires the Print button; opening Reports never launches a print dialog.
+  Time Card includes Scheduled Date (the existing manually entered task start
+  date) and sorts ascending by that date, with priority/due-date ties resolved
+  consistently. Task properties use the same Scheduled Date label; sorting never
+  reschedules work. Non-chargeable categories show no scheduled date.
+  Removing the Reports interface does not delete clockings, archived tasks,
+  existing Work Tickets or running timers. Historical data stays in the same
+  workspace format. Old `#reports` bookmarks fall back to Work/Time Card.
+  Browser printing now prints the Time Card, including its Scheduled Date column.
 - `task-manager.html`: the internal Task-Manager module, embedded under the shared
   Client Lite header/navigation. The old standalone URL redirects to
   `lite-demo.html#task-manager`. It has Task, Task Description, Estimated Time
   (decimal hours), Priority and Due Date, plus add/edit/remove/search/sort.
-  Tasks are shared with Work/Reports through `lite-store.js`, not copied between
+  Tasks are shared with Work through `lite-store.js`, not copied between
   independent apps. The canonical workspace is `paidpro-client-lite-v2`.
   First use imports `paidpro-lite-example-v1` tasks, clockings and tickets and
   `paidpro-task-manager-v1` tasks. Both old keys remain untouched. New Task-Manager
