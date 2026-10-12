@@ -9,3 +9,23 @@
 dialog select { display: block; width: 100%; margin-top: 4px; }
 @media (prefers-reduced-motion: reduce) { .toggle span { transition: none; } }
 @media print { #task-manager { display: none !important; } }
+#chart th:not(:first-child), #chart td:not(:first-child) { width: 120px; min-width: 120px; }
+#chart .gantt-heading-note { display: block; margin-top: 10px; color: #63788b; font-size: 11px; font-weight: 400; }
+#chart .gantt-available, #chart .gantt-assigned { display: block; margin-top: 6px; font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
+#chart .gantt-available { color: #42657e; }
+#chart .gantt-assigned { font-weight: 700; }
+#chart .gantt-assigned.overloaded { background: #fee2e2; color: #8a2330; border-radius: 4px; padding: 3px 4px; }
+#chart th.off-day:not(.today) { background: #eef2f6; color: #65788b; }
+#chart th:first-child, #chart td:first-child { overflow-wrap: anywhere; white-space: normal; }
+@media (max-width: 750px) { #chart th:first-child, #chart td:first-child { width: 160px; min-width: 160px; max-width: 160px; } }
+.report-sheet { background: #fff; border: 1px solid #c4d1dd; padding: 26px; }
+.report-heading { display: flex; align-items: center; gap: 16px; padding-bottom: 20px; border-bottom: 2px solid #173c62; }
+.report-heading img { width: 46px; height: 46px; object-fit: contain; }
+.report-heading h2 { margin: 0 0 6px; font-size: 22px; }
+.report-heading p { margin: 0; font-size: 12px; color: #526980; }
+.report-sheet .table-wrap { border: 0; min-height: 180px; margin-top: 18px; }
+.report-summary { margin: 20px 0 0; padding-top: 14px; border-top: 1px solid #d1dbe3; font-size: 12px; line-height: 1.7; }
+@media (max-width: 750px) { .report-sheet { padding: 16px; } .report-heading h2 { font-size: 19px; } }
+@media print { .report-sheet { padding: 0; border: 0; } .report-sheet .table-wrap { min-height: 0; margin-top: 16px; } .report-heading { break-after: avoid; } #report-table tr { break-inside: avoid; } }
+@page { size: landscape; margin: 12mm; }
+@media print { html { background: #fff; color-scheme: light; } body { min-height: 100vh; } }

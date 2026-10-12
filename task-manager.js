@@ -90,7 +90,9 @@
     byId("next-days").disabled = pageOffset + 28 >= schedule.days.length;
     const head = document.createElement("tr");
     ["Task / scheduler order", "Start → finish", "Result"].forEach((label) => { const th = document.createElement("th"); th.scope = "col"; th.textContent = label; head.append(th); });
-    days.forEach((d) => { const th = document.createElement("th"); th.scope = "col"; th.className = `day-heading ${d.working ? "" : "off-day"} ${d.date === today() ? "current-day" : ""}`; th.textContent = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(`${d.date}T12:00:00`)); const name = document.createElement("small"); name.textContent = new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(new Date(`${d.date}T12:00:00`)); th.append(name); head.append(th); });
+    days.forEach((d) => { const th = document.createElement("th"); th.scope = "col"; th.className = `day-heading ${d.working ? "" : "off-day"} ${d.date === today() ? "current-day" : ""}`; th.textContent = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(`${d.date}T12:00:00`)); const name = document.createElement("small"); name.textContent = new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(new Date(`${d.date}T12:00:00`)); th.append(name);
+      const available=document.createElement('small');available.className='calendar-available';available.textContent=`Available ${numberFormat.format(d.regularCapacity)} hr`;
+      const assigned=document.createElement('small');assigned.className='calendar-assigned';assigned.textContent=`Assigned ${numberFormat.format(d.regular+d.overtime)} hr`;if(d.regular+d.overtime>d.regularCapacity+.0001)assigned.classList.add('over-capacity');th.append(available,assigned);head.append(th); });
     byId("schedule-head").replaceChildren(head);
     const body = document.createDocumentFragment();
     schedule.tasks.forEach((task) => {

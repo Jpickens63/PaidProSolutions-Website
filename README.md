@@ -65,6 +65,17 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
 - `lite-demo.html`: the single PAIDPRO CLIENT LITE shell. Work contains Time Card
   and manually dated Project Gantt; Reports contains weekly hours and Work Tickets.
   This browser example uses localStorage, not SQLite.
+  Project Gantt shows daily Available and Assigned hours above the dates. Capacity
+  defaults to 8 hours Monday-Friday and shares the Task-Manager work calendar.
+  Remaining estimated task hours are spread across manually entered working dates
+  (rounded in hundredths, with no lost hours); this does not reschedule tasks.
+  Non-working days have zero capacity and overloaded days are highlighted.
+  Reports opens on today's print-ready Daily Work Report, with scheduled task
+  rows, assigned hours and actual recorded hours kept distinct. Manual Work Ticket
+  items remain available in their existing report view, separate from actual work.
+  Historical task clockings remain visible even after completion/archival.
+  A running timer is identified and included only through the preview time.
+  Printing requires the Print button; opening Reports never launches a print dialog.
 - `task-manager.html`: the internal Task-Manager module, embedded under the shared
   Client Lite header/navigation. The old standalone URL redirects to
   `lite-demo.html#task-manager`. It has Task, Task Description, Estimated Time
