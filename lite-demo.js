@@ -23,7 +23,7 @@
     const rows=noncharge?['Lunch','Break','Meeting','Holiday','Vacation','Other'].map(name=>({id:name,name,category:name.toUpperCase()})):openTasks();
     for(const task of rows){const tr=document.createElement('tr'),category=task.category||'TASK';
       tr.dataset.taskId=task.id;
-      [task.project||'—',task.milestone||'—',task.start||'—',task.name,task.description||'Non-project time',task.estimate?.toFixed(2)||'—',category==='TASK'?store.chargedHours(task,state).toFixed(2):'—',task.due||'—'].forEach((text,i)=>{const c=cell(tr,text);if(i===2)c.className='scheduled-date';if(i===5||i===6)c.className='num';});
+      [task.project||'—',task.milestone||'—',task.name,task.description||'Non-project time',task.estimate?.toFixed(2)||'—',category==='TASK'?store.chargedHours(task,state).toFixed(2):'—',task.start||'—',task.due||'—'].forEach((text,i)=>{const c=cell(tr,text);if(i===6)c.className='scheduled-date';if(i===4||i===5)c.className='num';});
       if(state.active?.task===task.id)tr.classList.add('running');tr.tabIndex=0;tr.onclick=()=>select(task.id,category);tr.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(task.id,category);}};
       tr.oncontextmenu=e=>context(e,category==='TASK'?task.id:null);$('tasks').append(tr);
     }renderTimer();renderChart();
