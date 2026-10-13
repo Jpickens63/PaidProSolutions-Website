@@ -85,7 +85,7 @@
     return closed+(state.active?.category==="TASK"&&state.active.task===task.id?Math.max(0,Date.now()-state.active.start)/3600000:0);
   }
   function managerTasks(state=get()) {
-    return state.tasks.filter(t=>!t.complete&&!t.archived).map(t=>({id:t.id,name:t.name,description:t.description,hours:t.estimate,priority:t.priority,due:t.due,createdAt:t.createdAt,chargedHours:chargedHours(t,state)}));
+    return state.tasks.filter(t=>!t.complete&&!t.archived).map(t=>({id:t.id,name:t.name,description:t.description,hours:t.estimate,priority:t.priority,due:t.due,availableFrom:t.start,active:state.active?.category==='TASK'&&state.active.task===t.id,createdAt:t.createdAt,chargedHours:chargedHours(t,state)}));
   }
   function saveManagerTasks(tasks, expectedRevision) {
     return update(s=>{

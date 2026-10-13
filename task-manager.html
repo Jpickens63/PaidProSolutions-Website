@@ -9,9 +9,9 @@
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" href="task-manager.css">
   <script src="lite-module.js" defer></script>
-  <script src="task-scheduler.js" defer></script>
-  <script src="task-export.js" defer></script>
-  <script src="task-manager.js" defer></script>
+  <script src="task-scheduler.js?v=matrix-20261013" defer></script>
+  <script src="task-export.js?v=matrix-20261013" defer></script>
+  <script src="task-manager.js?v=matrix-20261013" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to Task Manager</a>
@@ -98,8 +98,9 @@
         <p id="calendar-error" class="form-error" role="alert" hidden></p>
       </form>
       <div class="plan-outcome" id="plan-outcome" role="status" aria-live="polite"><strong id="plan-verdict">Add tasks to see your schedule.</strong><p id="plan-explanation"></p></div>
-      <div class="plan-metrics"><div><span>Minimum extra hours needed</span><strong id="required-overtime">—</strong></div><div><span>Overtime in this plan</span><strong id="planned-overtime">—</strong></div><div><span>Missed / at-risk deadlines</span><strong id="late-tasks">—</strong></div></div>
-      <p class="planner-note">One person, all tasks ready to start, no dependencies. Earlier deadlines come first; priority breaks ties. Only necessary overtime is added, up to your daily limit. Past deadlines are flagged, never backdated; late work uses spare normal capacity after protecting remaining deadlines. This is a planning estimate, not overtime authorization.</p>
+      <div class="plan-metrics"><div><span>Estimated extra hours needed</span><strong id="required-overtime">—</strong></div><div><span>Overtime in this plan</span><strong id="planned-overtime">—</strong></div><div><span>Missed / at-risk deadlines</span><strong id="late-tasks">—</strong></div></div>
+      <p class="planner-note">One person, no dependencies. The decision matrix chooses the next available task using working days to deadline, priority and remaining hours per day. That task runs to completion before another starts; a running Time Card task stays first. Scheduled Date in Work sets the earliest start. Extra hours are added within your daily limit. Past deadlines are flagged, never backdated. Extra-hours estimates apply to this matrix plan; they are not a global optimum or overtime authorization.</p>
+      <details class="planner-note"><summary>Decision matrix</summary><p>When a task finishes, available tasks receive a score. The highest score goes next. Working days left is counted through the due date, with a minimum of one.</p><table><thead><tr><th>Factor</th><th>Contribution to score</th></tr></thead><tbody><tr><td>Deadline proximity</td><td>1,000,000 ÷ working days left</td></tr><tr><td>Priority</td><td>Urgent 2,000 · High 1,000 · Normal 500 · Low 0</td></tr><tr><td>Remaining work</td><td>(Remaining hours ÷ working days left) × 10</td></tr></tbody></table><p>A running task keeps its place until its remaining estimate is finished. Scores choose the next task; they do not divide daily hours between tasks.</p></details>
       <div id="schedule-results" hidden>
         <div class="gantt-toolbar"><div><h3>Your working plan</h3><p><span class="legend-dot regular-dot"></span>Normal hours <span class="legend-dot overtime-dot"></span>Includes overtime <span class="legend-dot late-dot"></span>Late work</p></div><div class="gantt-paging"><button type="button" class="button subtle" id="previous-days" aria-label="Previous 28 days">←</button><span id="date-range"></span><button type="button" class="button subtle" id="next-days" aria-label="Next 28 days">→</button></div></div>
         <div class="gantt-scroll" tabindex="0" aria-label="Task Gantt, scroll horizontally for daily dates"><table class="schedule-table" id="schedule-table"><caption class="sr-only">Scheduled task dates, daily hours and normal/overtime capacity</caption><thead id="schedule-head"></thead><tbody id="schedule-rows"></tbody><tfoot id="schedule-totals"></tfoot></table></div>

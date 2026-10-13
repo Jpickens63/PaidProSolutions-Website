@@ -45,6 +45,9 @@
     const s = { version: 1, start: calendar.start.value, regular: Number(calendar.regular.value), overtime: Number(calendar.overtime.value), weekdays: [...document.querySelectorAll(".working-days input:checked")].map((input) => Number(input.value)), excluded: calendar.excluded.value.split(",").map((d) => d.trim()).filter(Boolean) };
     try { return readCalendar(JSON.stringify(s)); } catch { return null; }
   }
+  function notifyCalendar(){
+    if(window.parent!==window){const s=calendarSettings();window.parent.dispatchEvent(new window.parent.CustomEvent('paidpro-calendar-change',{detail:s?{...s,fallback:!calendarWritable}:null}));}
+  }
   function formatDate(value) { return value ? dateFormat.format(new Date(`${value}T12:00:00`)) : "Not fully scheduled"; }
   function recalculate() {
     const settings = calendarSettings();
@@ -68,12 +71,13 @@
     schedule = PaidproScheduler.plan(planningTasks, settings, today());
     byId("export-excel").disabled = !planningTasks.length;
     byId("schedule-results").hidden = !planningTasks.length;
-    byId("required-overtime").textContent = `${numberFormat.format(schedule.requiredOvertime)} hr`;
+    byId("required-overtime").textContent = `${numberFormat.format(schedule.requiredOvertime)} hr${schedule.extraCapacityShortage?' gap':''}`;
     byId("planned-overtime").textContent = `${numberFormat.format(schedule.plannedOvertime)} hr`;
     byId("late-tasks").textContent = schedule.lateCount;
     byId("plan-outcome").className = `plan-outcome ${schedule.lateCount || schedule.beyondCount || schedule.unplannedHours ? "risk" : schedule.requiredOvertime ? "extra" : "fits"}`;
     byId("plan-verdict").textContent = !tasks.length ? "Add tasks to see your schedule." : schedule.lateCount ? "Not all deadlines can be met with this calendar." : schedule.beyondCount ? "Some deadlines are beyond the planning window." : schedule.requiredOvertime ? "Overtime is needed to meet these deadlines." : "Your tasks fit within normal working hours.";
-    byId("plan-explanation").textContent = !tasks.length ? "Start with your normal workweek, then enter each task’s remaining hours and due date." : `${numberFormat.format(schedule.requiredOvertime)} extra hours are needed across reachable deadlines; this plan uses ${numberFormat.format(schedule.plannedOvertime)} hr under your daily limit. ${schedule.lateCount ? `${schedule.lateCount} task(s) are overdue, before your plan start, or short of capacity by their deadline. ` : ""}${schedule.start !== settings.start ? `Plan starts today (${formatDate(schedule.start)}), not in the past. ` : ""}${schedule.beyondCount ? `${schedule.beyondCount} task(s) need a later planning window. ` : ""}${schedule.unplannedHours ? `${numberFormat.format(schedule.unplannedHours)} hr cannot fit in the two-year window.` : ""}`;
+    byId("plan-explanation").textContent = !tasks.length ? "Start with your normal workweek, then enter each task’s estimated hours and due date." : `The matrix plan estimates ${numberFormat.format(schedule.requiredOvertime)} extra hours to meet reachable deadlines; this plan uses ${numberFormat.format(schedule.plannedOvertime)} hr under your daily limit. ${schedule.lateCount ? `${schedule.lateCount} task(s) are overdue, before your plan start, or short of capacity by their deadline. ` : ""}${schedule.start !== settings.start ? `Plan starts today (${formatDate(schedule.start)}), not in the past. ` : ""}${schedule.beyondCount ? `${schedule.beyondCount} task(s) need a later planning window. ` : ""}${schedule.unplannedHours ? `${numberFormat.format(schedule.unplannedHours)} hr cannot fit in the two-year window.` : ""}`;
+    if(schedule.extraCapacityShortage)byId('plan-explanation').textContent=`The matrix plan has a ${numberFormat.format(schedule.requiredOvertime)} hr capacity gap, including ${numberFormat.format(schedule.extraCapacityShortage)} hr that extra capacity cannot resolve in this plan. Review Scheduled Dates and deadlines. The configured plan uses ${numberFormat.format(schedule.plannedOvertime)} extra hr; ${schedule.lateCount} deadline(s) are missed or at risk.`;
     if (tasks.length && !planningTasks.length) {
       byId("plan-verdict").textContent = "All estimated hours have been recorded.";
       byId("plan-explanation").textContent = "Mark finished tasks complete in Time Card, or increase their estimates if work remains. Recorded time is never treated as a completion approval.";
@@ -99,6 +103,7 @@
       const tr = document.createElement("tr");
       const name = cell(`${task.order}. ${task.name}`, "Task", "schedule-name");
       name.title = `${task.description || task.name} · ${numberFormat.format(task.hours)} hr · ${priorityNames[task.priority]} · due ${formatDate(task.due)}`;
+      if(task.decision)name.title+=` · Selected with ${task.decision.daysLeft} working day(s) left, ${numberFormat.format(task.decision.burn)} remaining hr/day, score ${numberFormat.format(task.decision.score)}${task.active?' · Running task kept first':''}`;
       const dates = cell(`${task.start ? formatDate(task.start) : "—"} → ${formatDate(task.finish)}`, "Dates", "schedule-dates");
       const status = cell(task.status, "Result", task.shortageHours || task.unplannedHours ? "schedule-risk" : "schedule-status");
       tr.append(name, dates, status);
@@ -378,6 +383,7 @@
       try { localStorage.setItem(calendarKey, JSON.stringify(s)); }
       catch { calendarWritable = false; byId("calendar-error").textContent = "Calendar changes are kept only for this session because browser storage is unavailable."; byId("calendar-error").hidden = false; }
     }
+    notifyCalendar();
     render();
   });
   byId("previous-days").addEventListener("click", () => { pageOffset = Math.max(0, pageOffset - 28); renderSchedule(); });
@@ -394,6 +400,7 @@
       try { setCalendar(readCalendar(event.key === null ? null : event.newValue) || { start: today(), regular: 8, overtime: 2, weekdays: [1,2,3,4,5], excluded: [] }); render(); }
       catch { calendarWritable = false; byId("calendar-error").textContent = "Calendar saved by another tab could not be read. Existing saved settings have not been overwritten."; byId("calendar-error").hidden = false; }
     }
+    if(event.key===calendarKey||event.key===null)notifyCalendar();
   });
   sharedStore.subscribe(() => {
     reloadTasks();
@@ -403,5 +410,5 @@
   });
   window.addEventListener("focus", () => { if (day !== today()) render(); });
   setInterval(() => { if (day !== today() || sharedStore.get().active) { reloadTasks(); render(); } }, 60000);
-  render();
+  notifyCalendar();render();
 })();

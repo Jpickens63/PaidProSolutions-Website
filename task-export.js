@@ -30,7 +30,7 @@
     const last=7+schedule.tasks.length, lastCol=col(9+schedule.days.length), num=(n)=>Math.round(n*100)/100;
     row(2,[c("A2","PAIDPRO · Task Schedule","title")],30);
     row(3,[c("A3","Plan from","label"),c("B3",serial(schedule.start),"inputDate"),c("C3","Normal hr/day","label"),c("D3",settings.regular,"inputNumber"),c("E3","Max extra hr/day","label"),c("F3",settings.overtime,"inputNumber"),c("G3","Required extra hr","label"),c("H3",schedule.requiredOvertime,"metric"),c("I3","Single-person plan","label")]);
-    row(4,[c("A4","Earlier deadlines first; priority breaks ties. Blue = normal, amber = includes overtime, rose = late. Snapshot only: return to the website to reschedule.","note")],34);
+    row(4,[c("A4","Decision matrix: working days to deadline, priority and remaining hours/day. Finish each task before the next. Blue = normal, amber = overtime, rose = late. Snapshot: reschedule on the website.","note")],34);
     const weekCells=[c("A5","Planned extra hr","label"),c("B5",num(schedule.plannedOvertime),"metric",`SUM(H8:H${last})`),c("C5","At-risk tasks","label"),c("D5",schedule.lateCount,"metric"),c("E5","Unplanned hr","label"),c("F5",num(schedule.unplannedHours),"metric")];
     for(let i=0;i<schedule.days.length;) {
       const from=i, first=schedule.days[i].date, weekday=new Date(`${first}T00:00:00Z`).getUTCDay(), count=Math.min(schedule.days.length-i,7-((weekday+6)%7));

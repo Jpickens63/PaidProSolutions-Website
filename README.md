@@ -63,15 +63,18 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
 ## PAIDPRO CLIENT LITE browser workspace
 
 - `lite-demo.html`: the single PAIDPRO CLIENT LITE shell. Work contains Time Card
-  and manually dated Project Gantt. The Reports tab has been removed.
+  and a scheduled Project Gantt. The Reports tab has been removed.
   This browser example uses localStorage, not SQLite.
   Project Gantt shows daily Available and Assigned hours above the dates. Capacity
   defaults to 8 hours Monday-Friday and shares the Task-Manager work calendar.
-  Remaining estimated task hours are spread across manually entered working dates
-  (rounded in hundredths, with no lost hours); this does not reschedule tasks.
-  Non-working days have zero capacity and overloaded days are highlighted.
+  Project Gantt, Task-Manager and Excel export use one sequential plan from
+  `task-scheduler.js`. The selected task consumes available hours until finished,
+  then the next task starts (including on the same day when capacity remains).
+  Bars show actual planned hours, rounded in hundredths; empty days have no bar.
+  Amber includes extra hours and rose flags work after its deadline. Paging covers
+  the full plan. Non-working days have zero capacity.
   Time Card includes Scheduled Date (the existing manually entered task start
-  date) and sorts ascending by that date, with priority/due-date ties resolved
+  date, used as the earliest permitted start) and sorts ascending by that date, with priority/due-date ties resolved
   consistently. Task properties use the same Scheduled Date label; sorting never
   reschedules work. Non-chargeable categories show no scheduled date.
   Removing the Reports interface does not delete clockings, archived tasks,
@@ -89,12 +92,24 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   tasks default to PERSONAL / General; edit their affiliations in Work. Removing
   a task archives it so its clocking/ticket history keeps its labels. A running
   task cannot be removed. Completing a task in Work removes it from the planner.
-  Its single-person planner uses earliest due dates first, with priority as a tie
-  breaker. Normal capacity is used before minimum necessary overtime. Visitors
+  Its single-person planner ports the decision matrix in the reference workbook's
+  `PickMostUrgent_NoDynamic` VBA function: score = 1,000,000 / working days left
+  + priority weight * 1,000 + remaining hours / working days left * 10.
+  Urgent/High/Normal/Low map to the workbook's weights 2/1/0.5/0. Working days left
+  has a minimum of one. Score is evaluated when choosing the next available task;
+  that task remains selected until finished. An active Time Card task goes first.
+  The workbook's daily minimum allocations are intentionally replaced by this
+  run-to-completion policy. Normal capacity is used before extra hours. Visitors
   configure plan start, normal hours, a daily extra-hours limit, working weekdays
   and days off (`paidpro-task-calendar-v1`). Tasks may split across working days.
-  The plan uses total estimates minus recorded task time; there are no dependencies
-  or release dates. Consuming an estimate does not automatically complete a task.
+  The plan uses total estimates minus recorded task time and respects Scheduled
+  Date as availability. There are no task dependencies. Consuming an estimate
+  does not automatically complete a task or alter its saved dates/clockings.
+  Extra capacity is added before missed deadlines, rebuilding the same sequential
+  plan within the configured limit, then reduced only when no task's deadline
+  shortage or unplanned hours worsen. The estimate is specific to this decision
+  policy and is not a mathematically global minimum. Date constraints can remain
+  infeasible even with extra hours. The adjustment search is bounded at 200 passes.
   Past deadlines are flagged and never backdated. A rolling two-year horizon is
   explicit; shortages and beyond-window work are not reported as on time.
   The schedule recomputes on task/calendar changes and at a date rollover while
@@ -105,6 +120,8 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   locally into a standard `.xlsx` ZIP; no external library/CDN or upload is used.
   The original reference workbook and its private contents are not published.
   Exported dates are a snapshot, not an Excel-based rescheduler.
+
+Run the scheduler regressions with `node --test tests/scheduler.test.cjs`.
 
 The single Client Lite entry is linked from Time Management (`/#time-management`),
 accessible through the top menu or footer. The app links back to that section.
