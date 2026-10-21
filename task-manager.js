@@ -107,10 +107,15 @@
       const dates = cell(`${task.start ? formatDate(task.start) : "—"} → ${formatDate(task.finish)}`, "Dates", "schedule-dates");
       const status = cell(task.status, "Result", task.shortageHours || task.unplannedHours ? "schedule-risk" : "schedule-status");
       tr.append(name, dates, status);
+      const openDate = task.availableFrom || task.start;
       days.forEach((d) => {
         const a = task.allocations.find((item) => item.date === d.date);
         const td = cell(a ? numberFormat.format(a.regular + a.overtime) : "", d.date, `day-cell ${d.working ? "" : "off-day"} ${d.date === today() ? "current-day" : ""}`);
+        const markers = [];
+        if (d.date === openDate) { td.classList.add("task-open-date"); markers.push(`open date ${formatDate(openDate)}`); }
+        if (d.date === task.due) { td.classList.add("task-complete-date"); markers.push(`complete-by date ${formatDate(task.due)}`); }
         if (a) { td.classList.add(d.date > task.due ? "late-work" : a.overtime ? "extra-work" : "normal-work"); td.title = `${task.name} · ${formatDate(d.date)}: ${numberFormat.format(a.regular)} normal + ${numberFormat.format(a.overtime)} overtime hr`; td.setAttribute("tabindex", "0"); td.setAttribute("aria-label", td.title); }
+        if (markers.length) { td.title = `${task.name} · ${markers.join(" and ")}${a ? ` · ${td.title}` : ""}`; td.setAttribute("tabindex", "0"); td.setAttribute("aria-label", td.title); }
         tr.append(td);
       });
       body.append(tr);

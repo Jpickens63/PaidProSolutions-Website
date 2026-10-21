@@ -28,7 +28,7 @@
       tr.oncontextmenu=e=>context(e,category==='TASK'?task.id:null);$('tasks').append(tr);
     }renderTimer();renderChart();
   }
-  function context(event,id){event.preventDefault();event.stopPropagation();contextTask=id;$('context').hidden=false;$('context').style.left=Math.min(event.clientX,innerWidth-205)+'px';$('context').style.top=Math.min(event.clientY,innerHeight-190)+'px';$('context').querySelector('[data-action=edit]').disabled=!id;$('context').querySelector('[data-action=complete]').disabled=!id;}
+  function context(event,id){event.preventDefault();event.stopPropagation();contextTask=id;$('context').hidden=false;$('context').style.left=Math.min(event.clientX,innerWidth-205)+'px';$('context').style.top=Math.min(event.clientY,innerHeight-230)+'px';$('context').querySelector('[data-action=edit]').disabled=!id;$('context').querySelector('[data-action=complete]').disabled=!id;$('context').querySelector('[data-action=delete]').disabled=!id;}
   function edit(id=null){edited=id;editedRevision=state.revision;const t=state.tasks.find(t=>t.id===id)||{};$('editor-title').textContent=id?'Edit Task':'Add Task';
     for(const [input,prop] of [['project-code','project'],['project-name','projectName'],['milestone','milestone'],['task-name','name'],['description','description'],['estimate','estimate'],['priority','priority'],['start','start'],['due','due']])$(input).value=t[prop]??(input==='estimate'?1:input==='priority'?'normal':input==='start'||input==='due'?today:'');
     $('project-options').replaceChildren();$('milestone-options').replaceChildren();for(const name of new Set(state.tasks.map(t=>t.project))){const o=document.createElement('option');o.value=name;$('project-options').append(o);}for(const name of new Set(state.tasks.map(t=>t.milestone))){const o=document.createElement('option');o.value=name;$('milestone-options').append(o);}$('editor').showModal();
@@ -37,8 +37,19 @@
     const task={id:edited||uuid(),project:$('project-code').value.trim().toUpperCase(),projectName:$('project-name').value.trim(),milestone:$('milestone').value.trim(),name:$('task-name').value.trim(),description:$('description').value.trim(),estimate,start,due,priority:$('priority').value,createdAt:state.tasks.find(t=>t.id===edited)?.createdAt||Date.now(),complete:false,archived:false};
     if(!task.project||!task.projectName||!task.milestone||!task.name)return toast('Enter a project, milestone and task name.');
     if(edited)state.tasks=state.tasks.map(t=>t.id===edited?{...t,...task}:t);else state.tasks.push(task);const saved=save(edited?editedRevision:state.revision);if(saved)$('editor').close();render();};
+  function deleteTask(id){
+    const task=state.tasks.find(t=>t.id===id);
+    if(!task)return;
+    if(state.active?.category==='TASK'&&state.active.task===id)return toast('Stop the timer before deleting this task.');
+    const hasHistory=state.entries.some(entry=>entry.category==='TASK'&&entry.task===id)||state.tickets.some(ticket=>ticket.task===id);
+    const message=hasHistory?`Delete "${task.name}" from Client LITE? Existing clockings and Work Tickets will be preserved.`:`Delete "${task.name}" from Client LITE? This cannot be undone.`;
+    if(!confirm(message))return;
+    const expectedRevision=state.revision;
+    if(hasHistory)task.archived=true;else state.tasks=state.tasks.filter(item=>item.id!==id);
+    if(save(expectedRevision)){render();toast(hasHistory?'Task deleted from Client LITE. Its history was preserved.':'Task deleted.');}
+  }
   $('cancel').onclick=()=>$('editor').close();$('add').onclick=()=>edit();$('card').oncontextmenu=e=>context(e,null);
-  $('context').onclick=e=>{const action=e.target.dataset.action;$('context').hidden=true;if(action==='add')edit();if(action==='edit'&&contextTask)edit(contextTask);if(action==='stop')stop();if(action==='complete'&&contextTask){if(state.active?.task===contextTask&&stop()===false)return;state.tasks.find(t=>t.id===contextTask).complete=true;save();render();}};
+  $('context').onclick=e=>{const action=e.target.dataset.action;$('context').hidden=true;if(action==='add')edit();if(action==='edit'&&contextTask)edit(contextTask);if(action==='stop')stop();if(action==='complete'&&contextTask){if(state.active?.task===contextTask&&stop()===false)return;state.tasks.find(t=>t.id===contextTask).complete=true;save();render();}if(action==='delete'&&contextTask)deleteTask(contextTask);};
   document.addEventListener('click',e=>{if(!$('context').contains(e.target))$('context').hidden=true;});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')$('context').hidden=true;});
   $('mode').onclick=()=>{mode=!mode;$('mode').setAttribute('aria-checked',String(mode));$('mode-label').textContent=mode?'Project Gantt':'Time Card';$('card').hidden=mode;$('gantt').hidden=!mode;$('charge-control').hidden=mode;renderChart();if(mode)center();};
@@ -58,7 +69,7 @@
     $('gantt-next').disabled=plus(chartOffset+28)>summary.schedule.days.at(-1).date;
     const hours=new Intl.NumberFormat(undefined,{maximumFractionDigits:2}),table=$('chart');table.replaceChildren();
     const head=document.createElement('thead'),h=document.createElement('tr'),label=cell(h,'Project / Milestone / Task','th');label.scope='col';
-    const note=document.createElement('small');note.className='gantt-heading-note';note.textContent='Daily hours · single-user calendar';label.append(note);
+    const note=document.createElement('small');note.className='gantt-heading-note';note.textContent='Daily hours · green leading line = task open date · red trailing line = complete-by date';label.append(note);
     for(const day of summary.days){const c=cell(h,new Intl.DateTimeFormat(undefined,{weekday:'short',month:'short',day:'numeric'}).format(new Date(day.date+'T12:00:00')),'th');c.scope='col';c.dataset.date=day.date;
       if(day.date===today)c.classList.add('today');if(!day.available)c.classList.add('off-day');
       const available=document.createElement('small');available.className='gantt-available';available.textContent=`Available ${hours.format(day.available)} hr`;
@@ -66,8 +77,8 @@
       if(day.overtime){assigned.classList.add('overtime');c.title=`${hours.format(day.overtime)} extra hr planned; daily extra limit ${hours.format(day.extraAvailable)} hr`;}
       c.append(available,assigned);}
     head.append(h);table.append(head);const body=document.createElement('tbody');
-    for(const task of summary.tasks){const row=document.createElement('tr');row.dataset.taskId=task.id;const label=cell(row,`${task.order}. ${task.project} · ${task.milestone} / ${task.name}`);label.title=`${task.start||'Unscheduled'} → ${task.finish||'Not fully scheduled'} · ${task.status}`;row.ondblclick=()=>edit(task.id);
-      for(const day of summary.days){const c=cell(row,'');if(day.date===today)c.className='today';const a=day.allocations.find(a=>a.id===task.id);if(a){const block=document.createElement('div');block.className=`block ${day.date>task.due?'late-work':a.overtime?'extra-work':'normal-work'}`;block.textContent=`${hours.format(a.hours)} hr`;block.title=`${task.name}: ${task.start} → ${task.finish||'Not fully scheduled'} · ${hours.format(a.regular)} normal + ${hours.format(a.overtime)} extra hr on ${day.date}`;block.tabIndex=0;block.setAttribute('aria-label',block.title);c.append(block);}c.onclick=()=>{table.querySelectorAll('.selected').forEach(c=>c.classList.remove('selected'));c.classList.add('selected');};}body.append(row);
+    for(const task of summary.tasks){const row=document.createElement('tr');row.dataset.taskId=task.id;const openDate=task.availableFrom||task.start;const label=cell(row,`${task.order}. ${task.project} · ${task.milestone} / ${task.name}`);label.title=`Open ${openDate||'Unscheduled'} · complete by ${task.due} · planned ${task.start||'Unscheduled'} → ${task.finish||'Not fully scheduled'} · ${task.status}`;row.ondblclick=()=>edit(task.id);
+      for(const day of summary.days){const c=cell(row,'');if(day.date===today)c.classList.add('today');const markers=[];if(day.date===openDate){c.classList.add('task-open-date');markers.push(`open date ${openDate}`);}if(day.date===task.due){c.classList.add('task-complete-date');markers.push(`complete-by date ${task.due}`);}const a=day.allocations.find(a=>a.id===task.id);if(a){const block=document.createElement('div');block.className=`block ${day.date>task.due?'late-work':a.overtime?'extra-work':'normal-work'}`;block.textContent=`${hours.format(a.hours)} hr`;block.title=`${task.name}: ${task.start} → ${task.finish||'Not fully scheduled'} · ${hours.format(a.regular)} normal + ${hours.format(a.overtime)} extra hr on ${day.date}`;block.tabIndex=0;block.setAttribute('aria-label',block.title);c.append(block);}if(markers.length){c.title=`${task.name}: ${markers.join(' and ')}`;if(!a){c.tabIndex=0;c.setAttribute('aria-label',c.title);}}c.onclick=()=>{table.querySelectorAll('.selected').forEach(c=>c.classList.remove('selected'));c.classList.add('selected');};}body.append(row);
     }table.append(body);
     $('work-hint').textContent=mode?`Finish one task before starting the next. The decision matrix uses working days to deadline, priority and remaining hours per day. Scheduled Date sets the earliest start. Available: ${hours.format(calendar.regular)} normal hr/day, up to ${hours.format(calendar.overtime)} extra. Amber includes extra hours; rose marks late work.${summary.schedule.lateCount?` ${summary.schedule.lateCount} deadline(s) missed or at risk.`:''}${summary.unscheduled.length?' Some hours fall outside the two-year plan.':''}${calendar.fallback?' Calendar settings are session-only; check Task-Manager for details.':''}`:noncharge?'Click a time category to start, switch or stop. Right-click for more actions.':'Tasks are sorted by Scheduled Date, earliest first. Click a task to start, switch or stop; right-click for task actions.';
   }

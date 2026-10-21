@@ -7,11 +7,11 @@
   <meta name="theme-color" content="#061426">
   <title>Task-Manager | PAIDPRO CLIENT LITE</title>
   <link rel="icon" href="favicon.png">
-  <link rel="stylesheet" href="task-manager.css">
+  <link rel="stylesheet" href="task-manager.css?v=date-markers-20261021">
   <script src="lite-module.js" defer></script>
   <script src="task-scheduler.js?v=matrix-20261013" defer></script>
   <script src="task-export.js?v=matrix-20261013" defer></script>
-  <script src="task-manager.js?v=matrix-20261013" defer></script>
+  <script src="task-manager.js?v=date-markers-20261021" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to Task Manager</a>
@@ -102,7 +102,7 @@
       <p class="planner-note">One person, no dependencies. The decision matrix chooses the next available task using working days to deadline, priority and remaining hours per day. That task runs to completion before another starts; a running Time Card task stays first. Scheduled Date in Work sets the earliest start. Extra hours are added within your daily limit. Past deadlines are flagged, never backdated. Extra-hours estimates apply to this matrix plan; they are not a global optimum or overtime authorization.</p>
       <details class="planner-note"><summary>Decision matrix</summary><p>When a task finishes, available tasks receive a score. The highest score goes next. Working days left is counted through the due date, with a minimum of one.</p><table><thead><tr><th>Factor</th><th>Contribution to score</th></tr></thead><tbody><tr><td>Deadline proximity</td><td>1,000,000 ÷ working days left</td></tr><tr><td>Priority</td><td>Urgent 2,000 · High 1,000 · Normal 500 · Low 0</td></tr><tr><td>Remaining work</td><td>(Remaining hours ÷ working days left) × 10</td></tr></tbody></table><p>A running task keeps its place until its remaining estimate is finished. Scores choose the next task; they do not divide daily hours between tasks.</p></details>
       <div id="schedule-results" hidden>
-        <div class="gantt-toolbar"><div><h3>Your working plan</h3><p><span class="legend-dot regular-dot"></span>Normal hours <span class="legend-dot overtime-dot"></span>Includes overtime <span class="legend-dot late-dot"></span>Late work</p></div><div class="gantt-paging"><button type="button" class="button subtle" id="previous-days" aria-label="Previous 28 days">←</button><span id="date-range"></span><button type="button" class="button subtle" id="next-days" aria-label="Next 28 days">→</button></div></div>
+        <div class="gantt-toolbar"><div><h3>Your working plan</h3><p><span class="legend-dot regular-dot"></span>Normal hours <span class="legend-dot overtime-dot"></span>Includes overtime <span class="legend-dot late-dot"></span>Late work <span class="legend-line open-date-line"></span>Task open date <span class="legend-line complete-date-line"></span>Complete-by date</p></div><div class="gantt-paging"><button type="button" class="button subtle" id="previous-days" aria-label="Previous 28 days">←</button><span id="date-range"></span><button type="button" class="button subtle" id="next-days" aria-label="Next 28 days">→</button></div></div>
         <div class="gantt-scroll" tabindex="0" aria-label="Task Gantt, scroll horizontally for daily dates"><table class="schedule-table" id="schedule-table"><caption class="sr-only">Scheduled task dates, daily hours and normal/overtime capacity</caption><thead id="schedule-head"></thead><tbody id="schedule-rows"></tbody><tfoot id="schedule-totals"></tfoot></table></div>
         <p class="planner-note" id="schedule-limit"></p>
       </div>

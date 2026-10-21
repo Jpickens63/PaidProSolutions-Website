@@ -234,6 +234,8 @@ dialog h2 { font-size: 22px; margin-bottom: 14px; }
 .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin: 0 4px 0 10px; }
 .legend-dot:first-child { margin-left: 0; }
 .regular-dot { background: #278edc; }.overtime-dot { background: #b7843a; }.late-dot { background: #aa5c57; }
+.legend-line { display: inline-block; width: 4px; height: 13px; margin: 0 5px 0 12px; vertical-align: -2px; border-radius: 2px; }
+.open-date-line { background: #39c778; }.complete-date-line { background: #f06a70; }
 .gantt-paging { display: flex; gap: 10px; align-items: center; font-size: 11px; color: #bdd3e6; }
 .gantt-paging button { padding: 7px 10px; min-height: 35px; }
 button:disabled { opacity: .45; cursor: not-allowed; }
@@ -253,6 +255,10 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .schedule-table .day-cell, .schedule-table .day-heading { width: 56px; min-width: 56px; max-width: 56px; text-align: center; padding: 10px 4px; font-variant-numeric: tabular-nums; border-left: 1px solid #748da31f; }
 .day-heading small { display: block; text-transform: none; color: #afc4d7; margin-top: 5px; font-size: 9px; letter-spacing: 0; }
 .schedule-table .day-cell, .schedule-table .day-heading { width: 108px; min-width: 108px; max-width: 108px; }
+.schedule-table .day-cell { position: relative; }
+.schedule-table .day-cell.task-open-date::before, .schedule-table .day-cell.task-complete-date::after { content: ""; position: absolute; z-index: 2; top: 2px; bottom: 2px; width: 4px; border-radius: 2px; pointer-events: none; }
+.schedule-table .day-cell.task-open-date::before { left: 1px; background: #39c778; }
+.schedule-table .day-cell.task-complete-date::after { right: 1px; background: #f06a70; }
 .day-heading .calendar-assigned { color: #d8eaff; font-weight: 700; }
 .day-heading .calendar-assigned.over-capacity { background: #754741; color: #ffe9e3; border-radius: 3px; padding: 3px; }
 .schedule-table .off-day { background: #020f204f; color: #758ea4; }
