@@ -160,15 +160,39 @@ test('calendar parsing keeps plan start and overtime, and preserves unreadable d
   assert.equal(gantt.calendar('{broken',today).fallback,true);
 });
 test('planning reads charged time, availability and active state without mutating history', () => {
-  const now=Date.now(), saved={version:2,revision:7,tasks:[{...task('A',10),hours:undefined,estimate:10,start:today,project:'DEMO',projectName:'Demo',milestone:'Design',complete:false,archived:false}],entries:[{id:'e',task:'A',category:'TASK',start:now-7200000,end:now-3600000}],tickets:[],active:{id:'timer',task:'A',category:'TASK',start:now-3600000}};
+  const now=Date.now(), saved={version:2,revision:7,tasks:[{...task('A',10),taskNumber:'TASK-001',hours:undefined,estimate:10,start:today,project:'DEMO',projectName:'Demo',milestone:'Design',complete:false,archived:false}],entries:[{id:'e',task:'A',category:'TASK',start:now-7200000,end:now-3600000}],tickets:[],active:{id:'timer',task:'A',category:'TASK',start:now-3600000}};
   const raw=JSON.stringify(saved); let writes=0;
   const context={localStorage:{getItem:()=>raw,setItem:()=>writes++},window:{addEventListener(){}},crypto:require('node:crypto').webcrypto};
   vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../lite-store.js'),'utf8'),context);
   const before=JSON.stringify(context.ClientLiteStore.get()),input=context.ClientLiteStore.managerTasks();
-  assert.match(input[0].availableFrom,/^\d{4}-\d{2}-\d{2}$/);assert.equal(input[0].scheduleMode,'auto');assert.equal(input[0].dependsOn,null);assert.equal(input[0].active,true);
+  assert.match(input[0].availableFrom,/^\d{4}-\d{2}-\d{2}$/);assert.equal(input[0].taskNumber,'TASK-001');assert.equal(input[0].scheduleMode,'auto');assert.equal(input[0].dependsOn,null);assert.equal(input[0].active,true);
   assert.ok(input[0].chargedHours>=2 && input[0].chargedHours<2.01);
   scheduler.plan(input.map(t=>({...t,hours:cents(t.hours-t.chargedHours)/100})),calendar(),today);
   assert.equal(JSON.stringify(context.ClientLiteStore.get()),before);assert.equal(writes,0);
+});
+test('shared workspace assigns permanent serialized task numbers and continues the sequence', () => {
+  const record=(id,createdAt)=>({...task(id,4),hours:undefined,estimate:4,start:today,project:'CLIENT',projectName:'Client rollout',milestone:'Planning',scheduleMode:'auto',dependsOn:null,createdAt,complete:false,archived:false});
+  let raw=JSON.stringify({version:2,revision:0,tasks:[record('first',1),record('second',2)],entries:[],tickets:[],active:null});
+  const context={localStorage:{getItem:()=>raw,setItem:(_key,value)=>{raw=value;}},window:{addEventListener(){}},crypto:require('node:crypto').webcrypto};
+  vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../lite-store.js'),'utf8'),context);
+  const store=context.ClientLiteStore,initial=store.managerTasks();
+  assert.deepEqual(Array.from(initial,t=>t.taskNumber),['TASK-001','TASK-002']);
+  initial.push({id:'third',name:'Client review',description:'Review the implementation plan',hours:2,priority:'normal',due:'2026-10-20',dependsOn:null,createdAt:3});
+  store.saveManagerTasks(initial,store.get().revision);
+  assert.equal(store.managerTasks().find(t=>t.id==='third').taskNumber,'TASK-003');
+  assert.equal(store.nextTaskNumber(store.get()),'TASK-004');
+  store.saveManagerTasks(store.managerTasks().filter(t=>t.id!=='third'),store.get().revision);
+  assert.equal(store.nextTaskNumber(store.get()),'TASK-004');
+});
+test('obvious throwaway demo records refresh to the professional serialized starter project', () => {
+  const placeholder=(id,project,name)=>({...task(id,1),hours:undefined,estimate:1,start:today,project,projectName:'test',milestone:'Review',name,description:'task desc',scheduleMode:'auto',dependsOn:null,complete:false,archived:false});
+  let raw=JSON.stringify({version:2,revision:4,tasks:[placeholder('one','TEST1','task1'),placeholder('two','TEST2','Task2')],entries:[],tickets:[],active:null});
+  const context={localStorage:{getItem:()=>raw,setItem:(_key,value)=>{raw=value;}},window:{addEventListener(){}},crypto:require('node:crypto').webcrypto};
+  vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../lite-store.js'),'utf8'),context);
+  const state=context.ClientLiteStore.get();
+  assert.deepEqual(Array.from(state.tasks,t=>t.taskNumber),['TASK-001','TASK-002','TASK-003']);
+  assert.ok(state.tasks.every(t=>t.projectName==='Client Portal Rollout'));
+  assert.deepEqual(Array.from(state.tasks,t=>t.name),['Confirm project requirements','Prepare implementation plan','Present project plan']);
 });
 test('shared storage preserves dependencies, rejects loops, and protects prerequisites from removal', () => {
   const record=id=>({...task(id,4),hours:undefined,estimate:4,start:today,project:'DEMO',projectName:'Demo',milestone:'Design',scheduleMode:'auto',dependsOn:null,complete:false,archived:false});

@@ -68,15 +68,17 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   number so a deployed browser build can be identified without opening developer
   tools. `client-lite-version.json` is the source of truth. The website begins
   tracked release history at `0.1.0-preview.4`; the current website release is
-  `0.1.0-preview.5`. The verified Windows and Linux installer baseline immediately
+  `0.1.0-preview.6`. The verified Windows and Linux installer baseline immediately
   before it is `0.1.0-preview.3`. Website release commits use scoped Git tags such
-  as `client-lite-v0.1.0-preview.5`.
+  as `client-lite-v0.1.0-preview.6`.
   This browser example uses localStorage, not SQLite.
   Project Gantt shows daily Available and Assigned hours above the dates. Capacity
   defaults to 8 hours Monday-Friday and shares the Task-Manager work calendar.
   Project Gantt, Task-Manager and Excel export use one plan from
   `task-scheduler.js`. New tasks default to Auto Schedule. The Scheduler derives
   their dates from capacity, deadlines, priority, manual work and prerequisites.
+  Every task also receives a permanent `TASK-001` style display number that is
+  shared across Time Card, Task-Manager, Gantt views, dependencies and exports.
   Switching a task to Manual Schedule enables its date field and gives it
   priority on the requested working date. Auto work recalculates around it. A
   running Time Card task stays first. A task can select one prerequisite. The

@@ -101,7 +101,7 @@
     const body = document.createDocumentFragment();
     schedule.tasks.forEach((task) => {
       const tr = document.createElement("tr");
-      const name = cell(`${task.order}. ${task.name}`, "Task", "schedule-name");
+      const name = cell(`${task.taskNumber} · ${task.name}`, "Task", "schedule-name");
       name.title = `${task.description || task.name} · ${numberFormat.format(task.hours)} hr · ${priorityNames[task.priority]} · due ${formatDate(task.due)}`;
       if(task.decision)name.title+=` · Selected with ${task.decision.daysLeft} working day(s) left, ${numberFormat.format(task.decision.burn)} remaining hr/day, score ${numberFormat.format(task.decision.score)}${task.active?' · Running task kept first':''}`;
       const dates = cell(`${task.scheduleMode === "manual" ? "Manual" : "Auto"}: ${task.start ? formatDate(task.start) : "—"} → ${formatDate(task.finish)}`, "Dates", "schedule-dates");
@@ -203,6 +203,7 @@
       storageWritable = saved;
       if (saved) byId("save-state").textContent = "Saved on this device";
       else storageWarning(sharedStore.warning());
+      reloadTasks();
       return saved;
     } catch (error) {
       reloadTasks();
@@ -233,7 +234,7 @@
     button.className = `icon-button ${action}`;
     button.dataset.action = action;
     button.dataset.id = task.id;
-    button.setAttribute("aria-label", `${action === "edit" ? "Edit" : "Delete"} ${task.name}`);
+    button.setAttribute("aria-label", `${action === "edit" ? "Edit" : "Delete"} ${task.taskNumber} ${task.name}`);
     button.title = action === "edit" ? "Edit task" : "Delete task";
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 24 24");
@@ -250,7 +251,7 @@
     const query = byId("search-tasks").value.trim().toLocaleLowerCase();
     const sort = byId("sort-tasks").value;
     recalculate();
-    const visible = tasks.filter((task) => `${task.name} ${task.description}`.toLocaleLowerCase().includes(query));
+    const visible = tasks.filter((task) => `${task.taskNumber} ${task.name} ${task.description}`.toLocaleLowerCase().includes(query));
     visible.sort((a, b) => {
       if (sort === "schedule" && schedule) return (schedule.tasks.find((t) => t.id === a.id)?.order || Number.MAX_SAFE_INTEGER) - (schedule.tasks.find((t) => t.id === b.id)?.order || Number.MAX_SAFE_INTEGER);
       if (sort === "priority") return priorities[a.priority] - priorities[b.priority] || a.due.localeCompare(b.due) || a.createdAt - b.createdAt;
@@ -263,10 +264,11 @@
       const row = document.createElement("tr");
       row.dataset.id = task.id;
       if (task.id === editingId) row.classList.add("editing");
+      const taskCode=cell(task.taskNumber, "Task #", "task-code");
       const taskName=cell(task.name, "Task", "task-name");
       const scheduleLabel=document.createElement("small");scheduleLabel.className=`task-schedule-mode ${task.scheduleMode}`;scheduleLabel.textContent=task.scheduleMode==="manual"?"Manual schedule":"Auto schedule";taskName.append(scheduleLabel);
-      if(task.dependencyName){const dependencyLabel=document.createElement("small");dependencyLabel.className="task-dependency";dependencyLabel.textContent=`After: ${task.dependencyName}`;taskName.append(dependencyLabel);}
-      row.append(taskName, cell(task.description || "—", "Task description", "description"), cell(`${numberFormat.format(task.hours)} hr`, "Estimated time", "hours"));
+      if(task.dependencyName){const dependencyLabel=document.createElement("small");dependencyLabel.className="task-dependency";dependencyLabel.textContent=`After: ${task.dependencyNumber} · ${task.dependencyName}`;taskName.append(dependencyLabel);}
+      row.append(taskCode, taskName, cell(task.description || "—", "Task description", "description"), cell(`${numberFormat.format(task.hours)} hr`, "Estimated time", "hours"));
       const priority = cell("", "Priority");
       const badge = document.createElement("span");
       badge.className = `priority ${task.priority}`;
@@ -329,7 +331,7 @@
 
   function dependencyOptions(selected = "", selectedName = "") {
     fields.dependsOn.replaceChildren(new Option("No dependency", ""));
-    tasks.filter(task => task.id !== editingId && !wouldCreateCycle(task.id, editingId)).sort((a,b) => a.name.localeCompare(b.name)).forEach(task => fields.dependsOn.append(new Option(task.name, task.id)));
+    tasks.filter(task => task.id !== editingId && !wouldCreateCycle(task.id, editingId)).sort((a,b) => a.taskNumber.localeCompare(b.taskNumber)).forEach(task => fields.dependsOn.append(new Option(`${task.taskNumber} · ${task.name}`, task.id)));
     if (selected && ![...fields.dependsOn.options].some(option => option.value === selected)) fields.dependsOn.append(new Option(`${selectedName || "Completed prerequisite"} (complete)`, selected));
     fields.dependsOn.value = selected;
   }
@@ -342,12 +344,14 @@
     byId("form-caption").textContent = "Make room for your next piece of work.";
     byId("save-label").textContent = "Add task";
     byId("cancel-edit").hidden = true;
+    byId("task-number").textContent = sharedStore.nextTaskNumber(sharedStore.get());
     dependencyOptions();
   }
 
   function editTask(task) {
     editingId = task.id;
     editingRevision = tasksRevision;
+    byId("task-number").textContent = task.taskNumber;
     Object.entries(fields).forEach(([key, field]) => { field.value = task[key]; });
     dependencyOptions(task.dependsOn || "", task.dependencyName);
     formError("");
@@ -365,6 +369,7 @@
     formError("");
     const task = {
       id: editingId || crypto.randomUUID(),
+      taskNumber: editingId ? tasks.find((item) => item.id === editingId)?.taskNumber : byId("task-number").textContent,
       name: fields.name.value.trim(),
       description: fields.description.value.trim(),
       hours: Number(fields.hours.value),
@@ -470,5 +475,5 @@
   });
   window.addEventListener("focus", () => { if (day !== today()) render(); });
   setInterval(() => { if (day !== today() || sharedStore.get().active) { reloadTasks(); render(); } }, 60000);
-  dependencyOptions();notifyCalendar();render();
+  resetEditor();notifyCalendar();render();
 })();

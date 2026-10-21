@@ -43,7 +43,7 @@
     row(7,schedule.days.map((d,i)=>c(`${col(i+10)}7`,new Intl.DateTimeFormat("en-US",{weekday:"short",timeZone:"UTC"}).format(new Date(`${d.date}T00:00:00Z`)),"weekday")));
     schedule.tasks.forEach((t,i)=>{
       const r=i+8, map=new Map(t.allocations.map(a=>[a.date,a]));
-      const cells=[c(`A${r}`,t.name),c(`B${r}`,t.description),c(`C${r}`,t.priority[0].toUpperCase()+t.priority.slice(1)),c(`D${r}`,serial(t.due),"date"),c(`E${r}`,t.hours,"number"),c(`F${r}`,t.start?serial(t.start):null,"date"),c(`G${r}`,t.finish?serial(t.finish):null,"date"),c(`H${r}`,num(t.overtimeHours),"number"),c(`I${r}`,t.status,t.shortageHours||t.unplannedHours?"risk":"text")];
+      const cells=[c(`A${r}`,`${t.taskNumber} · ${t.name}`),c(`B${r}`,t.description),c(`C${r}`,t.priority[0].toUpperCase()+t.priority.slice(1)),c(`D${r}`,serial(t.due),"date"),c(`E${r}`,t.hours,"number"),c(`F${r}`,t.start?serial(t.start):null,"date"),c(`G${r}`,t.finish?serial(t.finish):null,"date"),c(`H${r}`,num(t.overtimeHours),"number"),c(`I${r}`,t.status,t.shortageHours||t.unplannedHours?"risk":"text")];
       schedule.days.forEach((d,j)=>{const a=map.get(d.date); if(a||!d.working) cells.push(c(`${col(j+10)}${r}`,a?num(a.regular+a.overtime):null,a?(d.date>t.due?"late":a.overtime?"overtime":"normal"):"off"));});
       row(r,cells,Math.max(38,Math.min(409,Math.ceil(Math.max(t.name.length/24,t.description.length/32))*13)));
     });

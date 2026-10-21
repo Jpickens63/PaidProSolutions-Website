@@ -1,5 +1,16 @@
 # PAIDPRO Client LITE release history
 
+## 0.1.0-preview.6
+
+- Every task receives a permanent serialized display number such as `TASK-001`.
+  Internal UUIDs remain unchanged for time entries and dependencies.
+- Time Card, Task-Manager, both Gantt views, dependency selectors, and Excel
+  exports show the same task number.
+- The starter workspace now demonstrates a professional Client Portal Rollout
+  with clear project, milestone, task, and description names.
+- Obvious throwaway demo records such as TEST1 / task1 / task desc are refreshed
+  to the improved starter workspace when they have no recorded time history.
+
 ## 0.1.0-preview.5
 
 - New tasks default to Auto Schedule. The Scheduler assigns their scheduled

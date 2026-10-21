@@ -62,6 +62,8 @@ form > input, form > textarea, form > .field-pair { margin-bottom: 17px; }
 .hours-field input { padding-right: 32px; }
 .hours-field span { position: absolute; right: 11px; top: 11px; font-size: 12px; color: var(--muted); pointer-events: none; }
 .field-hint { color: #96adc2; font-size: 10px; margin-top: -9px; margin-bottom: 18px; }
+.task-number-preview { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 17px; padding: 10px 12px; border: 1px solid #5585a847; border-radius: 6px; background: #102c45; color: #9bb5cb; font-size: 11px; }
+.task-number-preview output { color: #8bd1ff; font-size: 14px; font-weight: 750; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
 .form-actions { display: grid; gap: 8px; margin-top: 2px; }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 15px; border-radius: 6px; border: 1px solid #87a6bf50; padding: 11px 16px; min-height: 43px; font-size: 13px; font-weight: 600; }
 .primary { background: linear-gradient(180deg, #1b88d7, #1169b0); border-color: #68bffd8a; color: #fff; box-shadow: inset 0 1px 0 #c1eaff24; }
@@ -95,6 +97,7 @@ tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: #16466822; }
 tbody tr.editing { background: #1b598f37; box-shadow: inset 3px 0 0 #78c6f8; }
 td.task-name { width: 24%; font-size: 13px; font-weight: 600; color: #e0edf7; }
+td.task-code { white-space: nowrap; color: #8bd1ff; font-size: 12px; font-weight: 750; letter-spacing: .03em; font-variant-numeric: tabular-nums; }
 td.description { width: 27%; font-size: 11px; line-height: 1.65; white-space: pre-wrap; }
 td.task-name, td.description { overflow-wrap: anywhere; }
 td.hours { white-space: nowrap; color: #c5d8e8; font-variant-numeric: tabular-nums; }

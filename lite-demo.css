@@ -49,3 +49,4 @@ dialog input:disabled { color: #71808d; background: #e4e8ed; border-color: #c7cd
 #tasks tr.blocked td { background: #f0f3f6; }
 #tasks .dependency-state { display: block; margin-top: 2px; color: #a04a3a; font-size: 10px; font-weight: 700; }
 @media (max-width: 750px) { .dates { display: block; } .schedule-mode { grid-template-columns: 48px 1fr; } }
+td.project-cell{min-width:190px;color:#244e74;font-weight:650}td.task-code{white-space:nowrap;color:#0d5b98;font-weight:800;font-variant-numeric:tabular-nums}td.task-title{min-width:185px;font-weight:700;color:#173c62}.task-number-preview{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 16px;padding:10px 12px;border-radius:6px;background:#eaf3fb;color:#5b7287;font-size:12px}.task-number-preview output{color:#0d5b98;font-weight:800;font-size:15px;letter-spacing:.03em;font-variant-numeric:tabular-nums}
