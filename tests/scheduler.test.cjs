@@ -101,6 +101,37 @@ test('normal and extra hours remain chronological inside a task block', () => {
   assert.equal(result.tasks[1].start, '2026-10-14');
   invariants(result, input);
 });
+test('28 hours due Wednesday levels backward to 8, 10, 10 instead of 8, 8, 12', () => {
+  const input = [task('A', 28, '2026-10-14')];
+  const result = scheduler.plan(input, calendar({overtime:4}), today);
+  assert.deepEqual(result.days.slice(0,3).map(day=>day.regular+day.overtime), [8,10,10]);
+  assert.deepEqual(result.tasks[0].allocations, [
+    {date:'2026-10-12',regular:8,overtime:0},
+    {date:'2026-10-13',regular:8,overtime:2},
+    {date:'2026-10-14',regular:8,overtime:2}
+  ]);
+  assert.equal(result.plannedOvertime, 4);
+  invariants(result, input);
+});
+test('shortage beyond ten-hour days repeats backward in one-hour passes', () => {
+  const input = [task('A', 35, '2026-10-14')];
+  const result = scheduler.plan(input, calendar({overtime:4}), today);
+  assert.deepEqual(result.days.slice(0,3).map(day=>day.regular+day.overtime), [11,12,12]);
+  assert.equal(result.tasks[0].shortageHours, 0);
+  assert.equal(result.plannedOvertime, 11);
+  invariants(result, input);
+});
+test('backward leveling stops at today and subtracts work already recorded today', () => {
+  const input = [task('A', 14, '2026-10-13', {availableFrom:'2026-10-01'})];
+  const result = scheduler.plan(input, calendar({start:'2026-10-01',overtime:2,workedToday:6}), today);
+  assert.equal(result.start, today);
+  assert.deepEqual(result.days.slice(0,2).map(day=>({date:day.date,capacity:day.regularCapacity+day.overtimeCapacity,planned:day.regular+day.overtime})), [
+    {date:'2026-10-12',capacity:4,planned:4},
+    {date:'2026-10-13',capacity:10,planned:10}
+  ]);
+  assert.ok(result.tasks[0].allocations.every(allocation=>allocation.date>=today));
+  invariants(result, input);
+});
 test('insufficient overtime flags the real deadline shortage and schedules catch-up', () => {
   const input = [task('A', 16, today),task('B', 1)];
   const result = scheduler.plan(input, calendar(), today);
@@ -145,6 +176,21 @@ test('Project Gantt projects exactly the shared planner, including extra hours',
     }
   }
 });
+test('Excel export carries the shared 8, 10, 10 schedule without recalculating it', async () => {
+  const input=[task('A',28,'2026-10-14',{taskNumber:'TASK-001'})],settings=calendar({overtime:4}),result=scheduler.plan(input,settings,today);
+  const context={PaidproScheduler:scheduler,TextEncoder,Blob,Intl,setTimeout,URL:{createObjectURL(){return ''},revokeObjectURL(){}}};
+  vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../task-export.js'),'utf8'),context);
+  const template=JSON.parse(fs.readFileSync(path.join(__dirname,'../task-export-template.json'),'utf8'));
+  const bytes=new Uint8Array(await context.PaidproExport.build(result,settings,template).arrayBuffer()),decoder=new TextDecoder();
+  let offset=0,sheet='';
+  while(offset+30<=bytes.length&&new DataView(bytes.buffer,bytes.byteOffset+offset,4).getUint32(0,true)===0x04034b50){
+    const view=new DataView(bytes.buffer,bytes.byteOffset+offset),size=view.getUint32(18,true),nameLength=view.getUint16(26,true),extraLength=view.getUint16(28,true),name=decoder.decode(bytes.slice(offset+30,offset+30+nameLength)),dataStart=offset+30+nameLength+extraLength;
+    if(name==='xl/worksheets/sheet1.xml')sheet=decoder.decode(bytes.slice(dataStart,dataStart+size));
+    offset=dataStart+size;
+  }
+  assert.ok(sheet);
+  for(const [cell,value] of [['J8',8],['K8',10],['L8',10]])assert.match(sheet,new RegExp(`<c r="${cell}"[^>]*><v>${value}</v></c>`));
+});
 test('Project Gantt ignores a stored date for Auto tasks and honors a Manual date', () => {
   const projection = gantt.calculate([
     {...task('auto',4,'2026-10-20'),scheduleMode:'auto',start:'2026-11-01',remainingHours:4},
@@ -167,6 +213,8 @@ test('planning reads charged time, availability and active state without mutatin
   const before=JSON.stringify(context.ClientLiteStore.get()),input=context.ClientLiteStore.managerTasks();
   assert.match(input[0].availableFrom,/^\d{4}-\d{2}-\d{2}$/);assert.equal(input[0].taskNumber,'TASK-001');assert.equal(input[0].scheduleMode,'auto');assert.equal(input[0].dependsOn,null);assert.equal(input[0].active,true);
   assert.ok(input[0].chargedHours>=2 && input[0].chargedHours<2.01);
+  const start=new Date(`${today}T00:00:00`).getTime(),bounded={...saved,entries:[{id:'before',category:'OTHER',start:start-3600000,end:start+7200000},{id:'today',category:'OTHER',start:start+10800000,end:start+18000000}],active:{id:'active',category:'OTHER',start:start+25200000}};
+  assert.equal(context.ClientLiteStore.workedHours(today,bounded,start+28800000),5);
   scheduler.plan(input.map(t=>({...t,hours:cents(t.hours-t.chargedHours)/100})),calendar(),today);
   assert.equal(JSON.stringify(context.ClientLiteStore.get()),before);assert.equal(writes,0);
 });

@@ -41,12 +41,12 @@
   try { setCalendar(readCalendar(localStorage.getItem(calendarKey))); }
   catch { calendarWritable = false; byId("calendar-error").textContent = "Saved calendar could not be read. Default settings are used for this session; existing settings have not been overwritten."; byId("calendar-error").hidden = false; }
 
-  function calendarSettings() {
+  function calendarSettings(includeUsage = true) {
     const s = { version: 1, start: calendar.start.value, regular: Number(calendar.regular.value), overtime: Number(calendar.overtime.value), weekdays: [...document.querySelectorAll(".working-days input:checked")].map((input) => Number(input.value)), excluded: calendar.excluded.value.split(",").map((d) => d.trim()).filter(Boolean) };
-    try { return readCalendar(JSON.stringify(s)); } catch { return null; }
+    try { const parsed=readCalendar(JSON.stringify(s)); return includeUsage?{...parsed,workedToday:sharedStore.workedHours(today())}:parsed; } catch { return null; }
   }
   function notifyCalendar(){
-    if(window.parent!==window){const s=calendarSettings();window.parent.dispatchEvent(new window.parent.CustomEvent('paidpro-calendar-change',{detail:s?{...s,fallback:!calendarWritable}:null}));}
+    if(window.parent!==window){const s=calendarSettings(false);window.parent.dispatchEvent(new window.parent.CustomEvent('paidpro-calendar-change',{detail:s?{...s,fallback:!calendarWritable}:null}));}
   }
   function formatDate(value) { return value ? dateFormat.format(new Date(`${value}T12:00:00`)) : "Not fully scheduled"; }
   function recalculate() {
@@ -442,7 +442,7 @@
   byId("calendar-form").addEventListener("submit", (event) => event.preventDefault());
   byId("calendar-form").addEventListener("change", () => {
     calendarReady = true; pageOffset = 0;
-    const s = calendarSettings();
+    const s = calendarSettings(false);
     if (s && calendarWritable) {
       try { localStorage.setItem(calendarKey, JSON.stringify(s)); }
       catch { calendarWritable = false; byId("calendar-error").textContent = "Calendar changes are kept only for this session because browser storage is unavailable."; byId("calendar-error").hidden = false; }

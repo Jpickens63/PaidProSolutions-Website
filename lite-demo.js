@@ -21,7 +21,8 @@
     const calendar=workCalendar(),automaticStart=calendar?.start>today?calendar.start:today;
     return tasks.map(task=>{const remaining=Math.max(0,task.estimate-store.chargedHours(task,state)),dependency=dependencyTask(task);return {...task,scheduleMode:scheduleMode(task),availableFrom:scheduleMode(task)==='manual'?task.start:automaticStart,dependsOn:task.dependsOn||null,dependencyComplete:Boolean(dependency?.complete),dependencyName:dependency?.name||'',active:state.active?.category==='TASK'&&state.active.task===task.id,hours:remaining,remainingHours:remaining};});
   }
-  function taskPlan(tasks=activeTasks()){const calendar=workCalendar();return calendar?PaidproScheduler.plan(schedulerInput(tasks),calendar,today):null;}
+  const planningCalendar=calendar=>({...calendar,workedToday:store.workedHours(today,state)});
+  function taskPlan(tasks=activeTasks()){const calendar=workCalendar();return calendar?PaidproScheduler.plan(schedulerInput(tasks),planningCalendar(calendar),today):null;}
   function openTasks(plan=taskPlan()){
     const rank={urgent:0,high:1,normal:2,low:3},planned=new Map((plan?.tasks||[]).map(task=>[task.id,task.start]));
     const effective=task=>planned.has(task.id)?planned.get(task.id)||'9999-12-31':task.start;
@@ -90,7 +91,7 @@
     const calendar=workCalendar(),tasks=openTasks(),minimumOffset=minimumChartOffset(tasks);chartOffset=Math.max(chartOffset,minimumOffset);
     $('gantt-paging').hidden=!mode;
     if(!calendar){$('chart').replaceChildren();$('gantt-paging').hidden=true;$('work-hint').textContent=mode?'Check the work calendar in Task-Manager before scheduling.':noncharge?'Click a time category to start, switch or stop. Right-click for more actions.':'The Scheduler sets Auto task dates. Manual dates and completed prerequisites take priority.';return;}
-    const summary=PaidproGanttHours.calculate(schedulerInput(tasks),calendar,plus(chartOffset),plus(chartOffset+27),today);
+    const summary=PaidproGanttHours.calculate(schedulerInput(tasks),planningCalendar(calendar),plus(chartOffset),plus(chartOffset+27),today);
     $('gantt-range').textContent=`${summary.days[0].date} – ${summary.days.at(-1).date}`;
     $('gantt-previous').disabled=chartOffset<=minimumOffset;
     $('gantt-next').disabled=plus(chartOffset+28)>summary.schedule.days.at(-1).date;

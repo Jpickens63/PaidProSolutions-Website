@@ -19,9 +19,19 @@
     const start = settings.start > today ? settings.start : today, first = dateNumber(start);
     const limit = Math.min(first + 729, dateNumber("9999-12-31"));
     const excluded = new Set(settings.excluded || []), regular = units(settings.regular), overtime = Math.min(units(settings.overtime), units(24) - regular);
+    const workedToday = Math.min(units(24), Math.max(0, units(Number(settings.workedToday) || 0)));
     const calendar = Array.from({ length: limit - first + 1 }, (_, i) => {
       const date = dateString(first + i), working = settings.weekdays.includes(new Date((first + i) * DAY).getUTCDay()) && !excluded.has(date);
-      return { date, working, regularCapacity: working ? regular : 0, overtimeCapacity: working ? overtime : 0 };
+      const worked = working && date === today ? workedToday : 0;
+      const regularCapacity = working ? Math.max(0, regular - worked) : 0;
+      const remainingConfigured = working ? Math.max(0, regular + overtime - worked) : 0;
+      const remainingPhysical = working ? Math.max(0, units(24) - worked) : 0;
+      return {
+        date, working, regularCapacity,
+        overtimeCapacity: Math.max(0, remainingConfigured - regularCapacity),
+        maximumExtraCapacity: Math.max(0, remainingPhysical - regularCapacity),
+        tenHourExtraCapacity: working ? Math.max(0, Math.min(remainingPhysical, units(10) - worked) - regularCapacity) : 0
+      };
     });
     const prefix = [0];
     calendar.forEach(d => prefix.push(prefix.at(-1) + Number(d.working)));
@@ -66,7 +76,7 @@
         if (day.working && current?.remaining && !current.active && current.scheduleMode === "auto" &&
             work.some(t => t.remaining && t.scheduleMode === "manual" && t.ready <= index && dependencyReady(t))) current = null;
         if (day.working) for (const type of ["regular", "overtime"]) {
-          let capacity = type === "regular" ? regular : extra[index];
+          let capacity = type === "regular" ? day.regularCapacity : extra[index];
           while (capacity > 0) {
             if (!current?.remaining) current = pick(index);
             if (!current) break;
@@ -88,17 +98,33 @@
     };
     const missed = result => result.tasks.filter(t => t.deadline >= 0 && t.deadline < calendar.length && t.shortage).sort(tie);
     const zero = calendar.map(() => 0), normal = build(zero);
-    function solve(maxExtra) {
+    function solve(maxExtra, configuredLimit) {
       let extra = zero.slice(), result = normal;
       const blocked = new Set();
+      const limitFor = i => Math.min(maxExtra, configuredLimit ? calendar[i].overtimeCapacity : calendar[i].maximumExtraCapacity);
+      function addBackwards(deadline, need) {
+        let changed = false;
+        // Joseph's original rule: first level eligible days backward toward a
+        // ten-hour day. If work is still short, repeat backward in one-hour
+        // passes. The current day is the boundary; the plan never backdates.
+        for (let i = deadline; i >= 0 && need; i--) {
+          const add = calendar[i].working ? Math.min(need, Math.max(0, Math.min(calendar[i].tenHourExtraCapacity, limitFor(i)) - extra[i])) : 0;
+          if (add > 0) { extra[i] += add; need -= add; changed = true; }
+        }
+        while (need) {
+          let passChanged = false;
+          for (let i = deadline; i >= 0 && need; i--) {
+            const add = calendar[i].working ? Math.min(need, units(1), Math.max(0, limitFor(i) - extra[i])) : 0;
+            if (add > 0) { extra[i] += add; need -= add; changed = passChanged = true; }
+          }
+          if (!passChanged) break;
+        }
+        return changed;
+      }
       for (let attempt = 0; attempt < 200; attempt++) {
         const target = missed(result).find(t => !blocked.has(t.id));
         if (!target) break;
-        let need = deficit(result, target), changed = false;
-        for (let i = target.deadline; i >= 0 && need; i--) {
-          const add = calendar[i].working ? Math.min(need, maxExtra - extra[i]) : 0;
-          if (add > 0) { extra[i] += add; need -= add; changed = true; }
-        }
+        const changed = addBackwards(target.deadline, deficit(result, target));
         if (!changed) blocked.add(target.id); else result = build(extra);
       }
       // Removing extra capacity can change matrix choices. Accept a reduction
@@ -122,8 +148,8 @@
       }
       return result;
     }
-    const scheduled = overtime && missed(normal).length ? solve(overtime) : normal;
-    const needed = missed(scheduled).length ? solve(Math.max(0, units(24) - regular)) : scheduled;
+    const scheduled = overtime && missed(normal).length ? solve(overtime, true) : normal;
+    const needed = missed(scheduled).length ? solve(Math.max(0, units(24) - regular), false) : scheduled;
     const extraUsed = result => result.days.reduce((sum, d) => sum + d.overtime, 0);
     const unresolved = Math.max(0, ...missed(needed).map(t => deficit(needed, t)));
     const required = extraUsed(needed) + unresolved;
@@ -142,7 +168,7 @@
     });
     const lastUsed = scheduled.days.findLastIndex(d => d.allocations.length);
     const lastDue = Math.max(0, ...inputs.map(t => Math.min(calendar.length - 1, Math.max(0, t.deadline))));
-    const shown = scheduled.days.slice(0, Math.min(calendar.length, Math.max(27, lastUsed, lastDue) + 1)).map(d => ({
+    const shown = scheduled.days.slice(0, Math.min(calendar.length, Math.max(27, lastUsed, lastDue) + 1)).map(({ maximumExtraCapacity, tenHourExtraCapacity, ...d }) => ({
       ...d, regular: hours(d.regular), overtime: hours(d.overtime), regularCapacity: hours(d.regularCapacity), overtimeCapacity: hours(d.overtimeCapacity)
     }));
     return { start, windowEnd: dateString(limit), tasks: results, days: shown,

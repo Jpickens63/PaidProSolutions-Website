@@ -122,6 +122,13 @@
     const closed=state.entries.filter(e=>e.category==="TASK"&&e.task===task.id).reduce((sum,e)=>sum+(e.end-e.start)/3600000,0);
     return closed+(state.active?.category==="TASK"&&state.active.task===task.id?Math.max(0,Date.now()-state.active.start)/3600000:0);
   }
+  function workedHours(date, state=get(), now=Date.now()) {
+    if (!validDate(date)) return 0;
+    const [year,month,day]=date.split("-").map(Number), from=new Date(year,month-1,day).getTime(), to=new Date(year,month-1,day+1).getTime();
+    const overlap=entry=>Math.max(0,Math.min(Number.isFinite(entry.end)?entry.end:now,to)-Math.max(entry.start,from));
+    const milliseconds=state.entries.reduce((sum,entry)=>sum+overlap(entry),0)+(state.active?overlap(state.active):0);
+    return Math.round(milliseconds/36000)/100;
+  }
   function managerTasks(state=get()) {
     const byId=new Map(state.tasks.map(t=>[t.id,t]));
     return state.tasks.filter(t=>!t.complete&&!t.archived).map(t=>{const mode=t.scheduleMode==="manual"?"manual":"auto",dependency=t.dependsOn?byId.get(t.dependsOn):null;return {id:t.id,taskNumber:t.taskNumber,name:t.name,description:t.description,hours:t.estimate,priority:t.priority,due:t.due,scheduleMode:mode,availableFrom:mode==="manual"?t.start:localDate(),dependsOn:t.dependsOn||null,dependencyComplete:Boolean(dependency?.complete),dependencyName:dependency?.name||"",dependencyNumber:dependency?.taskNumber||"",active:state.active?.category==='TASK'&&state.active.task===t.id,createdAt:t.createdAt,chargedHours:chargedHours(t,state)};});
@@ -146,5 +153,5 @@
     });
   }
   window.addEventListener("storage",e=>{if(e.key===key||e.key===null){get();emit();}});
-  root.ClientLiteStore={key,get,update,seed,managerTasks,saveManagerTasks,chargedHours,nextTaskNumber,subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn);},warning:()=>warning,writable:()=>writable};
+  root.ClientLiteStore={key,get,update,seed,managerTasks,saveManagerTasks,chargedHours,workedHours,nextTaskNumber,subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn);},warning:()=>warning,writable:()=>writable};
 })(globalThis);

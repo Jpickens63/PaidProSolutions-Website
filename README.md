@@ -68,9 +68,9 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   number so a deployed browser build can be identified without opening developer
   tools. `client-lite-version.json` is the source of truth. The website begins
   tracked release history at `0.1.0-preview.4`; the current website release is
-  `0.1.0-preview.6`. The verified Windows and Linux installer baseline immediately
+  `0.1.0-preview.7`. The verified Windows and Linux installer baseline immediately
   before it is `0.1.0-preview.3`. Website release commits use scoped Git tags such
-  as `client-lite-v0.1.0-preview.6`.
+  as `client-lite-v0.1.0-preview.7`.
   This browser example uses localStorage, not SQLite.
   Project Gantt shows daily Available and Assigned hours above the dates. Capacity
   defaults to 8 hours Monday-Friday and shares the Task-Manager work calendar.
@@ -133,9 +133,13 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   remain sequential and a later one can slip when capacity is exhausted.
   Consuming an estimate
   does not automatically complete a task or alter its saved dates/clockings.
-  Extra capacity is added before missed deadlines, rebuilding the same sequential
-  plan within the configured limit, then reduced only when no task's deadline
-  shortage or unplanned hours worsen. The estimate is specific to this decision
+  Extra capacity is added before missed deadlines using the original backward
+  leveling rule. Eligible days rise toward 10 total hours from the deadline back
+  to today; if work is still short, one-hour backward passes repeat within the
+  configured daily limit. Recorded work and a running timer reduce the capacity
+  still available today. The same sequential plan is rebuilt, then extra capacity
+  is reduced only when no task's deadline shortage or unplanned hours worsen.
+  The estimate is specific to this decision
   policy and is not a mathematically global minimum. Date constraints can remain
   infeasible even with extra hours. The adjustment search is bounded at 200 passes.
   Past deadlines are flagged and never backdated. A rolling two-year horizon is

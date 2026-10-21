@@ -1,5 +1,17 @@
 # PAIDPRO Client LITE release history
 
+## 0.1.0-preview.7
+
+- Deadline overtime is leveled backward using the original scheduler rule:
+  eligible days first rise toward 10 hours, then further shortage is spread in
+  one-hour backward passes within the configured daily limit.
+- A 28-hour Monday-through-Wednesday workload now schedules as 8 / 10 / 10,
+  including when the daily extra-hours limit is greater than two.
+- Recorded work and a running timer reduce the capacity still available today.
+  Scheduling never reaches into a past day to make a deadline appear feasible.
+- Client LITE Project Gantt, Task-Manager and Excel export continue to use the
+  same shared schedule and daily allocations.
+
 ## 0.1.0-preview.6
 
 - Every task receives a permanent serialized display number such as `TASK-001`.
