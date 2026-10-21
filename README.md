@@ -73,7 +73,7 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   `task-scheduler.js`. The selected task consumes available hours until finished,
   then the next task starts (including on the same day when capacity remains).
   Bars show actual planned hours, rounded in hundredths; empty days have no bar.
-  Each task row has a green leading line on its stored open/Scheduled Date and a
+  Each task row has a green leading line on its task-created date and a
   red trailing line at the end of its Complete By date. Task-Manager uses the
   same date markers in its Gantt view.
   The Work task menu includes Delete Task with a confirmation prompt. A running

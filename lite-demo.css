@@ -18,8 +18,8 @@ dialog select { display: block; width: 100%; margin-top: 4px; }
 #chart .block { height: auto; min-height: 24px; padding: 3px; color: #fff; font-size: 12px; text-align: center; font-variant-numeric: tabular-nums; }
 #chart td:not(:first-child) { position: relative; }
 #chart .block { position: relative; z-index: 1; }
-#chart td.task-open-date::before, #chart td.task-complete-date::after { content: ""; position: absolute; z-index: 2; top: 2px; bottom: 2px; width: 4px; border-radius: 2px; pointer-events: none; }
-#chart td.task-open-date::before { left: 1px; background: #159447; }
+#chart td.task-created-date::before, #chart td.task-complete-date::after { content: ""; position: absolute; z-index: 2; top: 2px; bottom: 2px; width: 4px; border-radius: 2px; pointer-events: none; }
+#chart td.task-created-date::before { left: 1px; background: #159447; }
 #chart td.task-complete-date::after { right: 1px; background: #cf3d45; }
 #chart .block.extra-work { background: #fff0c8; color: #765111; }
 #chart .block.late-work { background: #fee2e2; color: #8a2330; }
