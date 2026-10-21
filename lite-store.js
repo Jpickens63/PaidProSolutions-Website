@@ -14,20 +14,27 @@
     return Number.isFinite(date.getTime()) && localDate(date) === value;
   }
   function validTask(t) {
-    return t && typeof t.id === "string" && t.id.length > 0 && t.id.length <= 80 && typeof t.name === "string" && t.name.trim() && t.name.length <= 150 && typeof t.description === "string" && t.description.length <= 2000 && Number.isFinite(t.estimate) && t.estimate > 0 && t.estimate <= 100000 && validDate(t.start) && validDate(t.due) && typeof t.project === "string" && typeof t.projectName === "string" && typeof t.milestone === "string" && priorities.includes(t.priority) && Number.isFinite(t.createdAt) && typeof t.complete === "boolean" && typeof t.archived === "boolean";
+    return t && typeof t.id === "string" && t.id.length > 0 && t.id.length <= 80 && typeof t.name === "string" && t.name.trim() && t.name.length <= 150 && typeof t.description === "string" && t.description.length <= 2000 && Number.isFinite(t.estimate) && t.estimate > 0 && t.estimate <= 100000 && validDate(t.start) && validDate(t.due) && typeof t.project === "string" && typeof t.projectName === "string" && typeof t.milestone === "string" && priorities.includes(t.priority) && Number.isFinite(t.createdAt) && typeof t.complete === "boolean" && typeof t.archived === "boolean" && (t.scheduleMode === undefined || t.scheduleMode === "auto" || t.scheduleMode === "manual") && (t.dependsOn === undefined || t.dependsOn === null || typeof t.dependsOn === "string" && t.dependsOn.length <= 80);
   }
   function validEntry(e, active = false) {
     return e && typeof e.id === "string" && typeof e.task === "string" && typeof e.category === "string" && Number.isFinite(e.start) && e.start >= 0 && (active || Number.isFinite(e.end) && e.end >= e.start);
   }
   function validState(s) {
-    return s && s.version === 2 && Array.isArray(s.tasks) && s.tasks.every(validTask) && new Set(s.tasks.map(t=>t.id)).size === s.tasks.length && Array.isArray(s.entries) && s.entries.every(e=>validEntry(e)) && Array.isArray(s.tickets) && s.tickets.every(t=>t && typeof t.task === "string" && validDate(t.day) && Number.isFinite(t.hours) && t.hours > 0) && (s.active === null || validEntry(s.active,true));
+    if (!(s && s.version === 2 && Array.isArray(s.tasks) && s.tasks.every(validTask) && new Set(s.tasks.map(t=>t.id)).size === s.tasks.length && Array.isArray(s.entries) && s.entries.every(e=>validEntry(e)) && Array.isArray(s.tickets) && s.tickets.every(t=>t && typeof t.task === "string" && validDate(t.day) && Number.isFinite(t.hours) && t.hours > 0) && (s.active === null || validEntry(s.active,true)))) return false;
+    const byId=new Map(s.tasks.map(t=>[t.id,t]));
+    for(const task of s.tasks){
+      if(task.dependsOn && (!byId.has(task.dependsOn)||task.dependsOn===task.id))return false;
+      const seen=new Set([task.id]);let current=task;
+      while(current.dependsOn){if(seen.has(current.dependsOn))return false;seen.add(current.dependsOn);current=byId.get(current.dependsOn);if(!current)break;}
+    }
+    return true;
   }
   function seed() {
     const today = localDate(), plus = n => { const d = new Date(); d.setDate(d.getDate()+n); return localDate(d); };
     return {version:2,revision:0,tasks:[
-      {id:uuid(),project:"DEMO001",projectName:"Workshop improvement",milestone:"Design ready",name:"Concept layout",description:"Review the layout and record design time",estimate:3,start:today,due:plus(2),priority:"high",createdAt:Date.now(),complete:false,archived:false},
-      {id:uuid(),project:"DEMO001",projectName:"Workshop improvement",milestone:"Design ready",name:"Detail drawing",description:"Produce the detail drawing",estimate:4,start:plus(1),due:plus(4),priority:"normal",createdAt:Date.now()+1,complete:false,archived:false},
-      {id:uuid(),project:"DEMO002",projectName:"Calibration tooling",milestone:"Prototype ready",name:"Prototype review",description:"Inspect the fit and document observations",estimate:1,start:today,due:plus(1),priority:"normal",createdAt:Date.now()+2,complete:false,archived:false}
+      {id:uuid(),project:"DEMO001",projectName:"Workshop improvement",milestone:"Design ready",name:"Concept layout",description:"Review the layout and record design time",estimate:3,start:today,due:plus(2),priority:"high",scheduleMode:"auto",dependsOn:null,createdAt:Date.now(),complete:false,archived:false},
+      {id:uuid(),project:"DEMO001",projectName:"Workshop improvement",milestone:"Design ready",name:"Detail drawing",description:"Produce the detail drawing",estimate:4,start:plus(1),due:plus(4),priority:"normal",scheduleMode:"auto",dependsOn:null,createdAt:Date.now()+1,complete:false,archived:false},
+      {id:uuid(),project:"DEMO002",projectName:"Calibration tooling",milestone:"Prototype ready",name:"Prototype review",description:"Inspect the fit and document observations",estimate:1,start:today,due:plus(1),priority:"normal",scheduleMode:"auto",dependsOn:null,createdAt:Date.now()+2,complete:false,archived:false}
     ],entries:[],tickets:[],active:null};
   }
   function migrate() {
@@ -37,14 +44,14 @@
     if (liteRaw) {
       const old = JSON.parse(liteRaw);
       if (!Array.isArray(old.tasks) || !Array.isArray(old.entries) || !Array.isArray(old.tickets)) throw Error("Unreadable old Client Lite workspace");
-      s.tasks = old.tasks.map((t,i)=>({...t,priority:t.priority||"normal",createdAt:t.createdAt||Date.now()+i,complete:Boolean(t.complete),archived:false}));
+      s.tasks = old.tasks.map((t,i)=>({...t,priority:t.priority||"normal",scheduleMode:"auto",dependsOn:null,createdAt:t.createdAt||Date.now()+i,complete:Boolean(t.complete),archived:false}));
       s.entries=old.entries;s.tickets=old.tickets;s.active=old.active||null;
     }
     if (managerRaw) {
       const old = JSON.parse(managerRaw);
       if (old.version !== 1 || !Array.isArray(old.tasks)) throw Error("Unreadable old Task-Manager workspace");
       for (const t of old.tasks) {
-        s.tasks.push({id:s.tasks.some(a=>a.id===t.id)?uuid():t.id,project:"PERSONAL",projectName:"My tasks",milestone:"General",name:t.name,description:t.description,estimate:t.hours,start:t.due<localDate()?t.due:localDate(),due:t.due,priority:t.priority,createdAt:t.createdAt,complete:false,archived:false});
+        s.tasks.push({id:s.tasks.some(a=>a.id===t.id)?uuid():t.id,project:"PERSONAL",projectName:"My tasks",milestone:"General",name:t.name,description:t.description,estimate:t.hours,start:t.due<localDate()?t.due:localDate(),due:t.due,priority:t.priority,scheduleMode:"auto",dependsOn:null,createdAt:t.createdAt,complete:false,archived:false});
       }
     }
     if (!validState(s)) throw Error("Old workspace contains invalid records");
@@ -85,7 +92,8 @@
     return closed+(state.active?.category==="TASK"&&state.active.task===task.id?Math.max(0,Date.now()-state.active.start)/3600000:0);
   }
   function managerTasks(state=get()) {
-    return state.tasks.filter(t=>!t.complete&&!t.archived).map(t=>({id:t.id,name:t.name,description:t.description,hours:t.estimate,priority:t.priority,due:t.due,availableFrom:t.start,active:state.active?.category==='TASK'&&state.active.task===t.id,createdAt:t.createdAt,chargedHours:chargedHours(t,state)}));
+    const byId=new Map(state.tasks.map(t=>[t.id,t]));
+    return state.tasks.filter(t=>!t.complete&&!t.archived).map(t=>{const mode=t.scheduleMode==="manual"?"manual":"auto",dependency=t.dependsOn?byId.get(t.dependsOn):null;return {id:t.id,name:t.name,description:t.description,hours:t.estimate,priority:t.priority,due:t.due,scheduleMode:mode,availableFrom:mode==="manual"?t.start:localDate(),dependsOn:t.dependsOn||null,dependencyComplete:Boolean(dependency?.complete),dependencyName:dependency?.name||"",active:state.active?.category==='TASK'&&state.active.task===t.id,createdAt:t.createdAt,chargedHours:chargedHours(t,state)};});
   }
   function saveManagerTasks(tasks, expectedRevision) {
     return update(s=>{
@@ -93,13 +101,15 @@
       const ids=new Set(tasks.map(t=>t.id));
       for (const t of s.tasks) if(!t.complete&&!t.archived&&!ids.has(t.id)) {
         if(s.active?.task===t.id&&s.active.category==="TASK") throw Error("Stop the Time Card timer before removing its task.");
+        const dependent=s.tasks.find(item=>!item.complete&&!item.archived&&item.dependsOn===t.id&&ids.has(item.id));
+        if(dependent)throw Error(`Remove the dependency from "${dependent.name}" before removing "${t.name}".`);
         t.archived=true;
       }
       for(const t of tasks) {
         const current=s.tasks.find(a=>a.id===t.id);
-        const fields={name:t.name,description:t.description,estimate:t.hours,priority:t.priority,due:t.due};
-        if(current) Object.assign(current,fields,{start:current.start>t.due?t.due:current.start});
-        else s.tasks.push({id:t.id,project:"PERSONAL",projectName:"My tasks",milestone:"General",...fields,start:t.due<localDate()?t.due:localDate(),createdAt:t.createdAt,complete:false,archived:false});
+        const fields={name:t.name,description:t.description,estimate:t.hours,priority:t.priority,due:t.due,dependsOn:t.dependsOn||null};
+        if(current) Object.assign(current,fields);
+        else s.tasks.push({id:t.id,project:"PERSONAL",projectName:"My tasks",milestone:"General",...fields,start:t.due<localDate()?t.due:localDate(),scheduleMode:"auto",createdAt:t.createdAt,complete:false,archived:false});
       }
       return s;
     });

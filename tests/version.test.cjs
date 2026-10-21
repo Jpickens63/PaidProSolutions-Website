@@ -18,9 +18,13 @@ test('Client Lite release metadata and visible badge match the version manifest'
   assert.ok(html.includes(`data-release="${version.release}"`));
   assert.ok(html.includes(`>${version.display}</span>`));
   assert.ok(html.includes(`lite-demo.css?v=${version.release}`));
+  assert.ok(html.includes(`lite-store.js?v=${version.release}`));
+  assert.ok(html.includes(`task-scheduler.js?v=${version.release}`));
+  assert.ok(html.includes(`gantt-hours.js?v=${version.release}`));
   assert.ok(html.includes(`lite-demo.js?v=${version.release}`));
   assert.ok(html.includes(`task-manager.html?embedded=1&amp;v=${version.release}`));
   assert.ok(manager.includes(`task-manager.css?v=${version.release}`));
+  assert.ok(manager.includes(`task-scheduler.js?v=${version.release}`));
   assert.ok(manager.includes(`task-manager.js?v=${version.release}`));
   assert.ok(changelog.includes(`## ${version.release}`));
 });

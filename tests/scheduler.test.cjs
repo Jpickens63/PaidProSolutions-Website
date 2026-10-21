@@ -55,6 +55,36 @@ test('a running task stays selected even when another deadline is closer', () =>
   assert.equal(result.tasks[1].shortageHours, 1);
   invariants(result, input);
 });
+test('a manual task starts on its requested working date and automatic work reschedules around it', () => {
+  const input = [
+    task('automatic', 20, '2026-10-20', {scheduleMode:'auto',availableFrom:today}),
+    task('manual', 4, '2026-10-20', {scheduleMode:'manual',availableFrom:'2026-10-13'})
+  ];
+  const result = scheduler.plan(input, calendar({overtime:0}), today);
+  const automatic = result.tasks.find(t => t.id === 'automatic');
+  const manual = result.tasks.find(t => t.id === 'manual');
+  assert.equal(manual.start, '2026-10-13');
+  assert.deepEqual(manual.allocations.map(a => a.date), ['2026-10-13']);
+  assert.deepEqual(automatic.allocations.map(a => a.date), ['2026-10-12','2026-10-13','2026-10-14']);
+  assert.deepEqual(result.days.find(d => d.date === '2026-10-13').allocations.map(a => a.id), ['manual','automatic']);
+});
+test('a dependent task cannot start until its prerequisite has finished', () => {
+  const input = [
+    task('prerequisite', 4, '2026-10-20', {priority:'low'}),
+    task('dependent', 4, today, {priority:'urgent',dependsOn:'prerequisite'})
+  ];
+  const result = scheduler.plan(input, calendar({overtime:0}), today);
+  assert.deepEqual(result.days[0].allocations.map(a => a.id), ['prerequisite','dependent']);
+  assert.equal(result.tasks.find(t => t.id === 'dependent').start, result.tasks.find(t => t.id === 'prerequisite').finish);
+  assert.equal(result.blockedCount, 0);
+});
+test('an unavailable prerequisite leaves its dependent visibly blocked', () => {
+  const result = scheduler.plan([task('dependent', 4, '2026-10-20', {dependsOn:'outside-plan'})], calendar({overtime:0}), today);
+  assert.equal(result.tasks[0].status, 'Blocked by dependency');
+  assert.equal(result.tasks[0].start, null);
+  assert.equal(result.tasks[0].unplannedHours, 4);
+  assert.equal(result.blockedCount, 1);
+});
 test('scheduled availability, weekends and days off are honored', () => {
   const input = [task('A', 9, '2026-10-20', {availableFrom:'2026-10-16'})];
   const result = scheduler.plan(input, calendar({excluded:['2026-10-16'],overtime:0}), today);
@@ -115,6 +145,14 @@ test('Project Gantt projects exactly the shared planner, including extra hours',
     }
   }
 });
+test('Project Gantt ignores a stored date for Auto tasks and honors a Manual date', () => {
+  const projection = gantt.calculate([
+    {...task('auto',4,'2026-10-20'),scheduleMode:'auto',start:'2026-11-01',remainingHours:4},
+    {...task('manual',4,'2026-10-20'),scheduleMode:'manual',start:'2026-10-13',remainingHours:4}
+  ], calendar({overtime:0}), today, '2026-10-20', today);
+  assert.equal(projection.tasks.find(t => t.id === 'auto').start, today);
+  assert.equal(projection.tasks.find(t => t.id === 'manual').start, '2026-10-13');
+});
 test('calendar parsing keeps plan start and overtime, and preserves unreadable data', () => {
   const raw = JSON.stringify({version:1,...calendar({start:'2026-10-20',overtime:3})});
   assert.equal(gantt.calendar(raw,today).start,'2026-10-20');
@@ -127,10 +165,22 @@ test('planning reads charged time, availability and active state without mutatin
   const context={localStorage:{getItem:()=>raw,setItem:()=>writes++},window:{addEventListener(){}},crypto:require('node:crypto').webcrypto};
   vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../lite-store.js'),'utf8'),context);
   const before=JSON.stringify(context.ClientLiteStore.get()),input=context.ClientLiteStore.managerTasks();
-  assert.equal(input[0].availableFrom,today);assert.equal(input[0].active,true);
+  assert.match(input[0].availableFrom,/^\d{4}-\d{2}-\d{2}$/);assert.equal(input[0].scheduleMode,'auto');assert.equal(input[0].dependsOn,null);assert.equal(input[0].active,true);
   assert.ok(input[0].chargedHours>=2 && input[0].chargedHours<2.01);
   scheduler.plan(input.map(t=>({...t,hours:cents(t.hours-t.chargedHours)/100})),calendar(),today);
   assert.equal(JSON.stringify(context.ClientLiteStore.get()),before);assert.equal(writes,0);
+});
+test('shared storage preserves dependencies, rejects loops, and protects prerequisites from removal', () => {
+  const record=id=>({...task(id,4),hours:undefined,estimate:4,start:today,project:'DEMO',projectName:'Demo',milestone:'Design',scheduleMode:'auto',dependsOn:null,complete:false,archived:false});
+  let raw=JSON.stringify({version:2,revision:0,tasks:[record('parent'),record('child')],entries:[],tickets:[],active:null});
+  const context={localStorage:{getItem:()=>raw,setItem:(_key,value)=>{raw=value;}},window:{addEventListener(){}},crypto:require('node:crypto').webcrypto};
+  vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../lite-store.js'),'utf8'),context);
+  const store=context.ClientLiteStore;
+  store.update(state=>{state.tasks.find(t=>t.id==='child').dependsOn='parent';return state;});
+  const input=store.managerTasks(),child=input.find(t=>t.id==='child');
+  assert.equal(child.dependsOn,'parent');assert.equal(child.dependencyName,'parent');assert.equal(child.dependencyComplete,false);
+  assert.throws(()=>store.saveManagerTasks(input.filter(t=>t.id!=='parent'),store.get().revision),/Remove the dependency/);
+  assert.throws(()=>store.update(state=>{state.tasks.find(t=>t.id==='parent').dependsOn='child';return state;}),/Invalid shared workspace update/);
 });
 test('deterministic varied workloads conserve hours and never return to a previous task', () => {
   let seed=71231;

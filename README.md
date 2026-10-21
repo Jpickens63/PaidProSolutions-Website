@@ -67,15 +67,22 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   The header displays the running Client Lite major/minor release and preview
   number so a deployed browser build can be identified without opening developer
   tools. `client-lite-version.json` is the source of truth. The website begins
-  tracked release history at `0.1.0-preview.4`; the verified Windows and Linux
-  installer baseline immediately before it is `0.1.0-preview.3`. Website release
-  commits use scoped Git tags such as `client-lite-v0.1.0-preview.4`.
+  tracked release history at `0.1.0-preview.4`; the current website release is
+  `0.1.0-preview.5`. The verified Windows and Linux installer baseline immediately
+  before it is `0.1.0-preview.3`. Website release commits use scoped Git tags such
+  as `client-lite-v0.1.0-preview.5`.
   This browser example uses localStorage, not SQLite.
   Project Gantt shows daily Available and Assigned hours above the dates. Capacity
   defaults to 8 hours Monday-Friday and shares the Task-Manager work calendar.
-  Project Gantt, Task-Manager and Excel export use one sequential plan from
-  `task-scheduler.js`. The selected task consumes available hours until finished,
-  then the next task starts (including on the same day when capacity remains).
+  Project Gantt, Task-Manager and Excel export use one plan from
+  `task-scheduler.js`. New tasks default to Auto Schedule. The Scheduler derives
+  their dates from capacity, deadlines, priority, manual work and prerequisites.
+  Switching a task to Manual Schedule enables its date field and gives it
+  priority on the requested working date. Auto work recalculates around it. A
+  running Time Card task stays first. A task can select one prerequisite. The
+  forecast schedules that prerequisite first, while Time Card prevents the
+  dependent task from starting until the prerequisite is marked complete.
+  Circular dependencies are rejected.
   Bars show actual planned hours, rounded in hundredths; empty days have no bar.
   Each task row has a green leading line on its task-created date and a
   red trailing line at the end of its Complete By date. Task-Manager uses the
@@ -87,10 +94,11 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   archived so their historical labels remain available.
   Amber includes extra hours and rose flags work after its deadline. Paging covers
   the full plan. Non-working days have zero capacity.
-  Time Card includes Scheduled Date (the existing manually entered task start
-  date, used as the earliest permitted start) and sorts ascending by that date, with priority/due-date ties resolved
-  consistently. Task properties use the same Scheduled Date label; sorting never
-  reschedules work. Non-chargeable categories show no scheduled date.
+  Time Card includes the effective Scheduled Date and sorts ascending by that
+  date, with priority/due-date ties resolved consistently. Auto and Manual badges
+  identify where the date came from, and Depends On shows the prerequisite. In
+  task properties, Auto Schedule grays out Scheduled Date; Manual Schedule
+  enables it. Non-chargeable categories show no scheduled date.
   Removing the Reports interface does not delete clockings, archived tasks,
   existing Work Tickets or running timers. Historical data stays in the same
   workspace format. Old `#reports` bookmarks fall back to Work/Time Card.
@@ -110,14 +118,18 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   `PickMostUrgent_NoDynamic` VBA function: score = 1,000,000 / working days left
   + priority weight * 1,000 + remaining hours / working days left * 10.
   Urgent/High/Normal/Low map to the workbook's weights 2/1/0.5/0. Working days left
-  has a minimum of one. Score is evaluated when choosing the next available task;
-  that task remains selected until finished. An active Time Card task goes first.
-  The workbook's daily minimum allocations are intentionally replaced by this
-  run-to-completion policy. Normal capacity is used before extra hours. Visitors
+  has a minimum of one. Score is evaluated when choosing the next available Auto
+  task. Auto work normally remains selected until finished, but a ready Manual
+  task takes priority at the start of its requested working day. A dependent task
+  is not eligible until its prerequisite finishes in the projection. An active
+  Time Card task goes first. Normal capacity is used before extra hours. Visitors
   configure plan start, normal hours, a daily extra-hours limit, working weekdays
   and days off (`paidpro-task-calendar-v1`). Tasks may split across working days.
-  The plan uses total estimates minus recorded task time and respects Scheduled
-  Date as availability. There are no task dependencies. Consuming an estimate
+  The plan uses total estimates minus recorded task time. Manual Scheduled Date
+  is requested availability; an Auto date is derived. A manual date on a
+  non-working day begins on the next day with capacity. Competing manual tasks
+  remain sequential and a later one can slip when capacity is exhausted.
+  Consuming an estimate
   does not automatically complete a task or alter its saved dates/clockings.
   Extra capacity is added before missed deadlines, rebuilding the same sequential
   plan within the configured limit, then reduced only when no task's deadline

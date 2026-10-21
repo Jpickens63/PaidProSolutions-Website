@@ -3,9 +3,9 @@
   "major": 0,
   "minor": 1,
   "patch": 0,
-  "prerelease": "preview.4",
-  "release": "0.1.0-preview.4",
-  "tag": "client-lite-v0.1.0-preview.4",
-  "priorRelease": "0.1.0-preview.3",
-  "display": "V0.1 · Preview 4"
+  "prerelease": "preview.5",
+  "release": "0.1.0-preview.5",
+  "tag": "client-lite-v0.1.0-preview.5",
+  "priorRelease": "0.1.0-preview.4",
+  "display": "V0.1 · Preview 5"
 }

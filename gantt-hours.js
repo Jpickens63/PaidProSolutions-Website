@@ -18,7 +18,8 @@
     const weekdays=new Set(settings.weekdays),excluded=new Set(settings.excluded);
     const start=number(first),end=number(last);
     if(!validDate(first)||!validDate(last)||end<start||end-start>3660)throw Error('Invalid Gantt window');
-    const schedule=scheduler.plan(tasks.map(t=>({...t,availableFrom:t.availableFrom||t.start,hours:Math.max(0,Math.round(t.remainingHours*100)/100)})),settings,today);
+    const automaticStart=settings.start>today?settings.start:today;
+    const schedule=scheduler.plan(tasks.map(t=>({...t,scheduleMode:t.scheduleMode==='manual'?'manual':'auto',availableFrom:t.scheduleMode==='manual'?t.start:automaticStart,hours:Math.max(0,Math.round(t.remainingHours*100)/100)})),settings,today);
     const planned=new Map(schedule.days.map(d=>[d.date,d]));
     const days=Array.from({length:end-start+1},(_,i)=>{
       const value=date(start+i),working=weekdays.has(new Date((start+i)*DAY).getUTCDay())&&!excluded.has(value),d=planned.get(value);

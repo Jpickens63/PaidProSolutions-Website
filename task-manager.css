@@ -291,3 +291,4 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .module-heading > p { max-width: 540px; color: var(--muted); font-size: 12px; line-height: 1.7; }
 .embedded-module .planner { margin-bottom: 22px; }
 @media (max-width: 750px) { .embedded-module .module-heading { display: block; }.module-heading > p { margin-top: 10px; }.embedded-module .shell { width: calc(100% - 28px); } }
+.task-schedule-mode,.task-dependency{display:block;width:max-content;margin-top:.3rem;padding:.1rem .45rem;border-radius:999px;background:#e0edf8;color:#315f83;font-size:.68rem;font-weight:750}.task-schedule-mode.manual{background:#fff0c8;color:#765111}.task-dependency{background:#ece7f7;color:#5f4683}

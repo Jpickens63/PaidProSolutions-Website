@@ -1,5 +1,6 @@
-/* Single-person decision-matrix planner. A selected task runs to completion.
-   Integer hundredths of an hour keep daily allocations and totals consistent. */
+/* Single-person decision-matrix planner. Automatic tasks run to completion unless
+   a manual task reaches its requested date. Integer hundredths of an hour keep
+   daily allocations and totals consistent. */
 (function (root) {
   "use strict";
   const DAY = 86400000;
@@ -25,7 +26,10 @@
     const prefix = [0];
     calendar.forEach(d => prefix.push(prefix.at(-1) + Number(d.working)));
     const inputs = tasks.filter(t => units(t.hours) > 0).map(t => ({
-      ...t, active: Boolean(t.active), total: units(t.hours), deadline: Math.floor(dateNumber(t.due) - first),
+      ...t, active: Boolean(t.active), scheduleMode: t.scheduleMode === "manual" ? "manual" : "auto",
+      dependsOn: typeof t.dependsOn === "string" && t.dependsOn ? t.dependsOn : null,
+      dependencyComplete: Boolean(t.dependencyComplete),
+      total: units(t.hours), deadline: Math.floor(dateNumber(t.due) - first),
       ready: t.active ? 0 : Math.max(0, Math.floor(dateNumber(t.availableFrom || t.start || start) - first))
     }));
     const tie = (a, b) => a.due.localeCompare(b.due) || (a.createdAt || 0) - (b.createdAt || 0) || a.id.localeCompare(b.id);
@@ -33,13 +37,17 @@
     function build(extra) {
       const days = calendar.map(d => ({ ...d, regular: 0, overtime: 0, allocations: [] }));
       const work = inputs.map(t => ({ ...t, remaining: t.total, shortage: t.deadline < 0 ? t.total : 0, allocations: [], order: 0 }));
+      const byId = new Map(work.map(t => [t.id, t]));
+      const dependencyReady = task => !task.dependsOn || task.dependencyComplete || (byId.has(task.dependsOn) && byId.get(task.dependsOn).remaining === 0);
       const deadlines = new Map();
       work.forEach(t => { const due=deadlines.get(t.deadline)||[]; due.push(t); deadlines.set(t.deadline,due); });
       let current = null, order = 0;
       function pick(day) {
-        let ready = work.filter(t => t.remaining && t.ready <= day);
+        let ready = work.filter(t => t.remaining && t.ready <= day && dependencyReady(t));
         const active = ready.find(t => t.active && !t.order);
         if (active) return active;
+        const manual = ready.filter(t => t.scheduleMode === "manual").sort((a, b) => a.ready - b.ready || tie(a, b));
+        if (manual.length) return manual[0];
         // Catch up already-overdue work when no unstarted live-deadline task is ready.
         const live = ready.filter(t => t.deadline >= day);
         if (live.length) ready = live;
@@ -55,6 +63,8 @@
         day.allocations.push({ id: task.id, name: task.name, type, hours: hours(amount) });
       }
       days.forEach((day, index) => {
+        if (day.working && current?.remaining && !current.active && current.scheduleMode === "auto" &&
+            work.some(t => t.remaining && t.scheduleMode === "manual" && t.ready <= index && dependencyReady(t))) current = null;
         if (day.working) for (const type of ["regular", "overtime"]) {
           let capacity = type === "regular" ? regular : extra[index];
           while (capacity > 0) {
@@ -72,7 +82,10 @@
     }
     // A missed deadline can be blocked by earlier selected tasks. Add capacity to
     // that prefix, rebuild the chronological plan, and keep per-day limits intact.
-    const deficit = (result, target) => result.tasks.filter(t => t.order <= target.order).reduce((sum, t) => sum + t.total - t.allocations.filter(a => a.date <= target.due).reduce((s, a) => s + a.regular + a.overtime, 0), 0);
+    const deficit = (result, target) => {
+      const beforeDue = t => t.total - t.allocations.filter(a => a.date <= target.due).reduce((sum, a) => sum + a.regular + a.overtime, 0);
+      return target.scheduleMode === "manual" ? beforeDue(target) : result.tasks.filter(t => t.order <= target.order).reduce((sum, t) => sum + beforeDue(t), 0);
+    };
     const missed = result => result.tasks.filter(t => t.deadline >= 0 && t.deadline < calendar.length && t.shortage).sort(tie);
     const zero = calendar.map(() => 0), normal = build(zero);
     function solve(maxExtra) {
@@ -121,7 +134,9 @@
       result.regularHours = hours(task.allocations.reduce((sum, a) => sum + a.regular, 0));
       result.overtimeHours = hours(task.allocations.reduce((sum, a) => sum + a.overtime, 0));
       result.shortageHours = hours(shortage); result.unplannedHours = hours(remaining);
-      result.status = deadline >= calendar.length ? "Beyond planning window" : task.due < today ? "Already overdue" : task.due < start ? "Before plan start" : shortage ? "Deadline at risk" : result.overtimeHours ? "On time with overtime" : "On time";
+      const prerequisite = task.dependsOn && scheduled.tasks.find(t => t.id === task.dependsOn);
+      const dependencyBlocked = remaining && task.dependsOn && !task.dependencyComplete && (!prerequisite || prerequisite.remaining);
+      result.status = dependencyBlocked ? "Blocked by dependency" : deadline >= calendar.length ? "Beyond planning window" : task.due < today ? "Already overdue" : task.due < start ? "Before plan start" : shortage ? "Deadline at risk" : result.overtimeHours ? "On time with overtime" : "On time";
       result.allocations = task.allocations.map(a => ({ date: a.date, regular: hours(a.regular), overtime: hours(a.overtime) }));
       return result;
     });
@@ -133,6 +148,7 @@
     return { start, windowEnd: dateString(limit), tasks: results, days: shown,
       requiredOvertime: hours(required), plannedOvertime: hours(extraUsed(scheduled)), extraCapacityShortage: hours(unresolved),
       lateCount: results.filter(t => t.shortageHours > 0).length,
+      blockedCount: results.filter(t => t.status === "Blocked by dependency").length,
       beyondCount: results.filter(t => t.status === "Beyond planning window").length,
       unplannedHours: hours(scheduled.tasks.reduce((sum, t) => sum + t.remaining, 0)) };
   }

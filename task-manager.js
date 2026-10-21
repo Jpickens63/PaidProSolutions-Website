@@ -6,7 +6,7 @@
   const priorityNames = { urgent: "Urgent", high: "High", normal: "Normal", low: "Low" };
   const byId = (id) => document.getElementById(id);
   const form = byId("task-form");
-  const fields = { name: byId("task-name"), description: byId("task-description"), hours: byId("task-hours"), priority: byId("task-priority"), due: byId("task-due") };
+  const fields = { name: byId("task-name"), description: byId("task-description"), hours: byId("task-hours"), priority: byId("task-priority"), due: byId("task-due"), dependsOn: byId("task-dependency") };
   const rows = byId("task-rows");
   const dialog = byId("delete-dialog");
   const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
@@ -75,8 +75,8 @@
     byId("planned-overtime").textContent = `${numberFormat.format(schedule.plannedOvertime)} hr`;
     byId("late-tasks").textContent = schedule.lateCount;
     byId("plan-outcome").className = `plan-outcome ${schedule.lateCount || schedule.beyondCount || schedule.unplannedHours ? "risk" : schedule.requiredOvertime ? "extra" : "fits"}`;
-    byId("plan-verdict").textContent = !tasks.length ? "Add tasks to see your schedule." : schedule.lateCount ? "Not all deadlines can be met with this calendar." : schedule.beyondCount ? "Some deadlines are beyond the planning window." : schedule.requiredOvertime ? "Overtime is needed to meet these deadlines." : "Your tasks fit within normal working hours.";
-    byId("plan-explanation").textContent = !tasks.length ? "Start with your normal workweek, then enter each task’s estimated hours and due date." : `The matrix plan estimates ${numberFormat.format(schedule.requiredOvertime)} extra hours to meet reachable deadlines; this plan uses ${numberFormat.format(schedule.plannedOvertime)} hr under your daily limit. ${schedule.lateCount ? `${schedule.lateCount} task(s) are overdue, before your plan start, or short of capacity by their deadline. ` : ""}${schedule.start !== settings.start ? `Plan starts today (${formatDate(schedule.start)}), not in the past. ` : ""}${schedule.beyondCount ? `${schedule.beyondCount} task(s) need a later planning window. ` : ""}${schedule.unplannedHours ? `${numberFormat.format(schedule.unplannedHours)} hr cannot fit in the two-year window.` : ""}`;
+    byId("plan-verdict").textContent = !tasks.length ? "Add tasks to see your schedule." : schedule.blockedCount ? "Some tasks are waiting for a prerequisite." : schedule.lateCount ? "Not all deadlines can be met with this calendar." : schedule.beyondCount ? "Some deadlines are beyond the planning window." : schedule.requiredOvertime ? "Overtime is needed to meet these deadlines." : "Your tasks fit within normal working hours.";
+    byId("plan-explanation").textContent = !tasks.length ? "Start with your normal workweek, then enter each task’s estimated hours and due date." : `The matrix plan estimates ${numberFormat.format(schedule.requiredOvertime)} extra hours to meet reachable deadlines; this plan uses ${numberFormat.format(schedule.plannedOvertime)} hr under your daily limit. ${schedule.blockedCount ? `${schedule.blockedCount} task(s) cannot start inside this plan because their prerequisite is not yet complete in the planning window. ` : ""}${schedule.lateCount ? `${schedule.lateCount} task(s) are overdue, before your plan start, or short of capacity by their deadline. ` : ""}${schedule.start !== settings.start ? `Plan starts today (${formatDate(schedule.start)}), not in the past. ` : ""}${schedule.beyondCount ? `${schedule.beyondCount} task(s) need a later planning window. ` : ""}${schedule.unplannedHours ? `${numberFormat.format(schedule.unplannedHours)} hr cannot fit in the two-year window.` : ""}`;
     if(schedule.extraCapacityShortage)byId('plan-explanation').textContent=`The matrix plan has a ${numberFormat.format(schedule.requiredOvertime)} hr capacity gap, including ${numberFormat.format(schedule.extraCapacityShortage)} hr that extra capacity cannot resolve in this plan. Review Scheduled Dates and deadlines. The configured plan uses ${numberFormat.format(schedule.plannedOvertime)} extra hr; ${schedule.lateCount} deadline(s) are missed or at risk.`;
     if (tasks.length && !planningTasks.length) {
       byId("plan-verdict").textContent = "All estimated hours have been recorded.";
@@ -104,7 +104,8 @@
       const name = cell(`${task.order}. ${task.name}`, "Task", "schedule-name");
       name.title = `${task.description || task.name} · ${numberFormat.format(task.hours)} hr · ${priorityNames[task.priority]} · due ${formatDate(task.due)}`;
       if(task.decision)name.title+=` · Selected with ${task.decision.daysLeft} working day(s) left, ${numberFormat.format(task.decision.burn)} remaining hr/day, score ${numberFormat.format(task.decision.score)}${task.active?' · Running task kept first':''}`;
-      const dates = cell(`${task.start ? formatDate(task.start) : "—"} → ${formatDate(task.finish)}`, "Dates", "schedule-dates");
+      const dates = cell(`${task.scheduleMode === "manual" ? "Manual" : "Auto"}: ${task.start ? formatDate(task.start) : "—"} → ${formatDate(task.finish)}`, "Dates", "schedule-dates");
+      dates.title = task.scheduleMode === "manual" ? `Requested start ${formatDate(task.availableFrom)}` : "Start assigned by the Scheduler";
       const status = cell(task.status, "Result", task.shortageHours || task.unplannedHours ? "schedule-risk" : "schedule-status");
       tr.append(name, dates, status);
       const createdDate = timestampDate(task.createdAt);
@@ -175,6 +176,7 @@
       typeof task.description === "string" && task.description.length <= 2000 &&
       typeof task.hours === "number" && Number.isFinite(task.hours) && task.hours >= 0.01 && task.hours <= 100000 &&
       Object.hasOwn(priorities, task.priority) && validDate(task.due) &&
+      (task.dependsOn === null || typeof task.dependsOn === "string" && task.dependsOn !== task.id) &&
       Number.isFinite(task.createdAt) && task.createdAt >= 0;
   }
 
@@ -261,7 +263,10 @@
       const row = document.createElement("tr");
       row.dataset.id = task.id;
       if (task.id === editingId) row.classList.add("editing");
-      row.append(cell(task.name, "Task", "task-name"), cell(task.description || "—", "Task description", "description"), cell(`${numberFormat.format(task.hours)} hr`, "Estimated time", "hours"));
+      const taskName=cell(task.name, "Task", "task-name");
+      const scheduleLabel=document.createElement("small");scheduleLabel.className=`task-schedule-mode ${task.scheduleMode}`;scheduleLabel.textContent=task.scheduleMode==="manual"?"Manual schedule":"Auto schedule";taskName.append(scheduleLabel);
+      if(task.dependencyName){const dependencyLabel=document.createElement("small");dependencyLabel.className="task-dependency";dependencyLabel.textContent=`After: ${task.dependencyName}`;taskName.append(dependencyLabel);}
+      row.append(taskName, cell(task.description || "—", "Task description", "description"), cell(`${numberFormat.format(task.hours)} hr`, "Estimated time", "hours"));
       const priority = cell("", "Priority");
       const badge = document.createElement("span");
       badge.className = `priority ${task.priority}`;
@@ -311,6 +316,24 @@
     byId("form-error").hidden = !message;
   }
 
+  function wouldCreateCycle(candidate, id) {
+    if (!candidate || !id) return false;
+    const byTask = new Map(tasks.map(task => [task.id, task]));
+    let current = byTask.get(candidate); const seen = new Set();
+    while (current && !seen.has(current.id)) {
+      if (current.id === id) return true;
+      seen.add(current.id); current = current.dependsOn ? byTask.get(current.dependsOn) : null;
+    }
+    return false;
+  }
+
+  function dependencyOptions(selected = "", selectedName = "") {
+    fields.dependsOn.replaceChildren(new Option("No dependency", ""));
+    tasks.filter(task => task.id !== editingId && !wouldCreateCycle(task.id, editingId)).sort((a,b) => a.name.localeCompare(b.name)).forEach(task => fields.dependsOn.append(new Option(task.name, task.id)));
+    if (selected && ![...fields.dependsOn.options].some(option => option.value === selected)) fields.dependsOn.append(new Option(`${selectedName || "Completed prerequisite"} (complete)`, selected));
+    fields.dependsOn.value = selected;
+  }
+
   function resetEditor() {
     editingId = null;
     form.reset();
@@ -319,12 +342,14 @@
     byId("form-caption").textContent = "Make room for your next piece of work.";
     byId("save-label").textContent = "Add task";
     byId("cancel-edit").hidden = true;
+    dependencyOptions();
   }
 
   function editTask(task) {
     editingId = task.id;
     editingRevision = tasksRevision;
     Object.entries(fields).forEach(([key, field]) => { field.value = task[key]; });
+    dependencyOptions(task.dependsOn || "", task.dependencyName);
     formError("");
     byId("form-heading").textContent = "Edit task";
     byId("form-caption").textContent = "Update the details. Keep the work clear.";
@@ -345,10 +370,11 @@
       hours: Number(fields.hours.value),
       priority: fields.priority.value,
       due: fields.due.value,
+      dependsOn: fields.dependsOn.value || null,
       createdAt: editingId ? tasks.find((item) => item.id === editingId)?.createdAt : Date.now()
     };
-    if (!validTask(task)) {
-      formError("Enter a task name, an estimated time of at least 0.01 hours, and a valid due date.");
+    if (!validTask(task) || wouldCreateCycle(task.dependsOn, task.id)) {
+      formError("Enter a task name, an estimated time of at least 0.01 hours, a valid due date, and a prerequisite that does not create a loop.");
       return;
     }
     if (!editingId && tasks.length >= 500) {
@@ -439,9 +465,10 @@
     reloadTasks();
     if (sharedStore.warning()) storageWarning(sharedStore.warning());
     if (editingId && !tasks.some(task => task.id === editingId)) resetEditor();
+    if (!editingId) dependencyOptions();
     render();
   });
   window.addEventListener("focus", () => { if (day !== today()) render(); });
   setInterval(() => { if (day !== today() || sharedStore.get().active) { reloadTasks(); render(); } }, 60000);
-  notifyCalendar();render();
+  dependencyOptions();notifyCalendar();render();
 })();

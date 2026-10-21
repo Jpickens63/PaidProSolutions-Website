@@ -1,5 +1,17 @@
 # PAIDPRO Client LITE release history
 
+## 0.1.0-preview.5
+
+- New tasks default to Auto Schedule. The Scheduler assigns their scheduled
+  dates and recalculates them when work, capacity, or manual dates change.
+- Switching a task to Manual Schedule enables Scheduled Date and gives that
+  task priority on its requested working date. Auto work moves around it.
+- A task can depend on one prerequisite task. The projected schedule places the
+  prerequisite first, and Time Card blocks starting the dependent task until
+  the prerequisite is actually marked complete.
+- Dependency loops are prevented, and a prerequisite with open dependents
+  cannot be deleted.
+
 ## 0.1.0-preview.4
 
 This is the first website release backed by an explicit version manifest,

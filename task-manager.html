@@ -7,11 +7,11 @@
   <meta name="theme-color" content="#061426">
   <title>Task-Manager | PAIDPRO CLIENT LITE</title>
   <link rel="icon" href="favicon.png">
-  <link rel="stylesheet" href="task-manager.css?v=0.1.0-preview.4">
+  <link rel="stylesheet" href="task-manager.css?v=0.1.0-preview.5">
   <script src="lite-module.js" defer></script>
-  <script src="task-scheduler.js?v=matrix-20261013" defer></script>
+  <script src="task-scheduler.js?v=0.1.0-preview.5" defer></script>
   <script src="task-export.js?v=matrix-20261013" defer></script>
-  <script src="task-manager.js?v=0.1.0-preview.4" defer></script>
+  <script src="task-manager.js?v=0.1.0-preview.5" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to Task Manager</a>
@@ -25,7 +25,7 @@
     </div>
   </header>
   <main class="shell" id="main">
-    <div class="module-heading"><div><p class="eyebrow">PAIDPRO CLIENT LITE / PLANNING</p><h1>Task-Manager</h1></div><p>One task list, shared with the date-sorted Time Card and Project Gantt. Plan deadlines and overtime, then export your Excel Gantt.</p></div>
+    <div class="module-heading"><div><p class="eyebrow">PAIDPRO CLIENT LITE / PLANNING</p><h1>Task-Manager</h1></div><p>One task list, shared with Time Card and Project Gantt. Auto dates recalculate around manual dates and task prerequisites.</p></div>
     <section class="intro" aria-labelledby="page-title">
       <div>
         <p class="eyebrow">PAIDPRO / INTERACTIVE DEMO</p>
@@ -60,10 +60,13 @@
           <p class="field-hint" id="hours-hint">Use decimal hours: 0.5 hr = 30 minutes.</p>
           <label for="task-due">Due date <span aria-hidden="true">*</span></label>
           <input id="task-due" name="due" type="date" required min="1900-01-01" max="9999-12-31">
+          <label for="task-dependency">Depends on task</label>
+          <select id="task-dependency" name="dependency"><option value="">No dependency</option></select>
+          <p class="field-hint">The selected prerequisite must be completed before this task can start.</p>
           <p id="form-error" class="form-error" role="alert" hidden></p>
           <div class="form-actions"><button type="submit" class="button primary" id="save-task"><span id="save-label">Add task</span><span aria-hidden="true">＋</span></button><button type="button" class="button subtle" id="cancel-edit" hidden>Cancel edit</button></div>
         </form>
-        <p class="editor-note">Estimates are total task hours. The planner subtracts time recorded in Time Card and recalculates remaining work. New tasks appear in Work under PERSONAL / General; edit their project and milestone there.</p>
+        <p class="editor-note">New tasks use Auto Schedule. Estimates are total task hours; the planner subtracts Time Card entries and recalculates remaining work. New tasks appear in Work under PERSONAL / General, where Auto can be changed to Manual.</p>
       </section>
       <section class="panel task-panel" aria-labelledby="list-heading">
         <div class="list-heading"><div><p class="eyebrow">SHARED WORKSPACE</p><h2 id="list-heading">Your tasks</h2></div><span class="local-badge"><i aria-hidden="true"></i><span id="save-state">Saved on this device</span></span></div>
@@ -99,7 +102,7 @@
       </form>
       <div class="plan-outcome" id="plan-outcome" role="status" aria-live="polite"><strong id="plan-verdict">Add tasks to see your schedule.</strong><p id="plan-explanation"></p></div>
       <div class="plan-metrics"><div><span>Estimated extra hours needed</span><strong id="required-overtime">—</strong></div><div><span>Overtime in this plan</span><strong id="planned-overtime">—</strong></div><div><span>Missed / at-risk deadlines</span><strong id="late-tasks">—</strong></div></div>
-      <p class="planner-note">One person, no dependencies. The decision matrix chooses the next available task using working days to deadline, priority and remaining hours per day. That task runs to completion before another starts; a running Time Card task stays first. Scheduled Date in Work sets the earliest start. Extra hours are added within your daily limit. Past deadlines are flagged, never backdated. Extra-hours estimates apply to this matrix plan; they are not a global optimum or overtime authorization.</p>
+      <p class="planner-note">One person with task prerequisites. A dependent task waits until its selected prerequisite is planned to finish. Manual tasks take priority on their requested date, and Auto tasks pause or move to accommodate them. A running Time Card task stays first. Extra hours are added within your daily limit. Past deadlines are flagged, never backdated. Extra-hours estimates apply to this matrix plan; they are not a global optimum or overtime authorization.</p>
       <details class="planner-note"><summary>Decision matrix</summary><p>When a task finishes, available tasks receive a score. The highest score goes next. Working days left is counted through the due date, with a minimum of one.</p><table><thead><tr><th>Factor</th><th>Contribution to score</th></tr></thead><tbody><tr><td>Deadline proximity</td><td>1,000,000 ÷ working days left</td></tr><tr><td>Priority</td><td>Urgent 2,000 · High 1,000 · Normal 500 · Low 0</td></tr><tr><td>Remaining work</td><td>(Remaining hours ÷ working days left) × 10</td></tr></tbody></table><p>A running task keeps its place until its remaining estimate is finished. Scores choose the next task; they do not divide daily hours between tasks.</p></details>
       <div id="schedule-results" hidden>
         <div class="gantt-toolbar"><div><h3>Your working plan</h3><p><span class="legend-dot regular-dot"></span>Normal hours <span class="legend-dot overtime-dot"></span>Includes overtime <span class="legend-dot late-dot"></span>Late work <span class="legend-line created-date-line"></span>Task created date <span class="legend-line complete-date-line"></span>Complete-by date</p></div><div class="gantt-paging"><button type="button" class="button subtle" id="previous-days" aria-label="Previous 28 days">←</button><span id="date-range"></span><button type="button" class="button subtle" id="next-days" aria-label="Next 28 days">→</button></div></div>
