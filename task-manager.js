@@ -83,14 +83,14 @@
       byId("plan-explanation").textContent = "Mark finished tasks complete in Time Card, or increase their estimates if work remains. Recorded time is never treated as a completion approval.";
     }
     byId("schedule-limit").textContent = `The planner looks ahead up to ${formatDate(schedule.windowEnd)}. Deadlines are inclusive (end of day). Days off and unchecked weekdays have no capacity. Hover or focus a day cell for its hours.`;
-    pageOffset = Math.min(pageOffset, Math.max(0, Math.ceil(schedule.days.length / 28) * 28 - 28));
+    pageOffset = Math.max(minimumPageOffset(), Math.min(pageOffset, Math.max(0, Math.ceil(schedule.days.length / 28) * 28 - 28)));
     renderSchedule();
   }
   function renderSchedule() {
     if (!schedule) return;
-    const days = schedule.days.slice(pageOffset, pageOffset + 28);
+    const days = Array.from({ length: 28 }, (_, index) => scheduleDay(pageOffset + index)).filter(Boolean);
     byId("date-range").textContent = `${formatDate(days[0].date)} – ${formatDate(days.at(-1).date)}`;
-    byId("previous-days").disabled = pageOffset === 0;
+    byId("previous-days").disabled = pageOffset <= minimumPageOffset();
     byId("next-days").disabled = pageOffset + 28 >= schedule.days.length;
     const head = document.createElement("tr");
     ["Task / scheduler order", "Start → finish", "Result"].forEach((label) => { const th = document.createElement("th"); th.scope = "col"; th.textContent = label; head.append(th); });
@@ -137,6 +137,29 @@
   function timestampDate(timestamp) {
     const date = new Date(timestamp);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  function shiftDate(value, offset) {
+    const date = new Date(`${value}T12:00:00`);
+    date.setDate(date.getDate() + offset);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  function minimumPageOffset() {
+    if (!schedule?.tasks.length) return 0;
+    const earliest = Math.min(0, ...schedule.tasks.map((task) => dateNumber(timestampDate(task.createdAt)) - dateNumber(schedule.start)));
+    return Math.floor(earliest / 28) * 28;
+  }
+
+  function dateNumber(value) {
+    const [year, month, date] = value.split("-").map(Number);
+    return Date.UTC(year, month - 1, date) / 86400000;
+  }
+
+  function scheduleDay(offset) {
+    if (offset >= schedule.days.length) return null;
+    if (offset >= 0) return schedule.days[offset];
+    return { date: shiftDate(schedule.start, offset), working: false, regularCapacity: 0, overtimeCapacity: 0, regular: 0, overtime: 0 };
   }
 
   function validDate(value) {
@@ -396,7 +419,7 @@
     notifyCalendar();
     render();
   });
-  byId("previous-days").addEventListener("click", () => { pageOffset = Math.max(0, pageOffset - 28); renderSchedule(); });
+  byId("previous-days").addEventListener("click", () => { pageOffset = Math.max(minimumPageOffset(), pageOffset - 28); renderSchedule(); });
   byId("next-days").addEventListener("click", () => { pageOffset += 28; renderSchedule(); });
   byId("export-excel").addEventListener("click", async () => {
     if (!schedule || !tasks.length) return;

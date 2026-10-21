@@ -64,8 +64,9 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
 
 - `lite-demo.html`: the single PAIDPRO CLIENT LITE shell. Work contains Time Card
   and a scheduled Project Gantt. The Reports tab has been removed.
-  The header displays the running date-based Client Lite version so a deployed
-  browser build can be identified without opening developer tools.
+  The header displays the running Client Lite major/minor release (for example,
+  V5.21 means major release 5 and minor release 21) so a deployed browser build
+  can be identified without opening developer tools.
   This browser example uses localStorage, not SQLite.
   Project Gantt shows daily Available and Assigned hours above the dates. Capacity
   defaults to 8 hours Monday-Friday and shares the Task-Manager work calendar.
@@ -75,7 +76,8 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
   Bars show actual planned hours, rounded in hundredths; empty days have no bar.
   Each task row has a green leading line on its task-created date and a
   red trailing line at the end of its Complete By date. Task-Manager uses the
-  same date markers in its Gantt view.
+  same date markers in its Gantt view. Backward paging remains available through
+  the earliest task-created date so markers for older tasks can still be viewed.
   The Work task menu includes Delete Task with a confirmation prompt. A running
   task must be stopped first. Tasks without clocking or Work Ticket history are
   permanently deleted; tasks with history are removed from Client Lite views and

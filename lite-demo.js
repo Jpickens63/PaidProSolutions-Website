@@ -5,6 +5,8 @@
   const localDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   let today=localDate(new Date());
   const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return localDate(d);};
+  const dateNumber=value=>{const [year,month,day]=value.split('-').map(Number);return Date.UTC(year,month-1,day)/86400000;};
+  const minimumChartOffset=tasks=>{const earliest=Math.min(-7,...tasks.map(task=>dateNumber(localDate(new Date(task.createdAt)))-dateNumber(today)));return earliest>=-7?-7:-7-28*Math.ceil((-7-earliest)/28);};
   const seed=store.seed;
   let state, mode=false, noncharge=false, edited=null, editedRevision=0, contextTask=null, calendarSession, chartOffset=-7;
   state=store.get();
@@ -60,12 +62,12 @@
     return PaidproGanttHours.calendar(raw,today);
   }
   function renderChart(){
-    const calendar=workCalendar(),tasks=openTasks();
+    const calendar=workCalendar(),tasks=openTasks(),minimumOffset=minimumChartOffset(tasks);chartOffset=Math.max(chartOffset,minimumOffset);
     $('gantt-paging').hidden=!mode;
     if(!calendar){$('chart').replaceChildren();$('gantt-paging').hidden=true;$('work-hint').textContent=mode?'Check the work calendar in Task-Manager before scheduling.':noncharge?'Click a time category to start, switch or stop. Right-click for more actions.':'Tasks are sorted by Scheduled Date, earliest first. Click a task to start, switch or stop; right-click for task actions.';return;}
     const summary=PaidproGanttHours.calculate(tasks.map(t=>({...t,active:state.active?.category==='TASK'&&state.active.task===t.id,remainingHours:Math.max(0,t.estimate-store.chargedHours(t,state))})),calendar,plus(chartOffset),plus(chartOffset+27),today);
     $('gantt-range').textContent=`${summary.days[0].date} – ${summary.days.at(-1).date}`;
-    $('gantt-previous').disabled=chartOffset<=-7;
+    $('gantt-previous').disabled=chartOffset<=minimumOffset;
     $('gantt-next').disabled=plus(chartOffset+28)>summary.schedule.days.at(-1).date;
     const hours=new Intl.NumberFormat(undefined,{maximumFractionDigits:2}),table=$('chart');table.replaceChildren();
     const head=document.createElement('thead'),h=document.createElement('tr'),label=cell(h,'Project / Milestone / Task','th');label.scope='col';
@@ -82,7 +84,7 @@
     }table.append(body);
     $('work-hint').textContent=mode?`Finish one task before starting the next. The decision matrix uses working days to deadline, priority and remaining hours per day. Scheduled Date sets the earliest start. Available: ${hours.format(calendar.regular)} normal hr/day, up to ${hours.format(calendar.overtime)} extra. Amber includes extra hours; rose marks late work.${summary.schedule.lateCount?` ${summary.schedule.lateCount} deadline(s) missed or at risk.`:''}${summary.unscheduled.length?' Some hours fall outside the two-year plan.':''}${calendar.fallback?' Calendar settings are session-only; check Task-Manager for details.':''}`:noncharge?'Click a time category to start, switch or stop. Right-click for more actions.':'Tasks are sorted by Scheduled Date, earliest first. Click a task to start, switch or stop; right-click for task actions.';
   }
-  $('gantt-previous').onclick=()=>{chartOffset=Math.max(-7,chartOffset-28);renderChart();};
+  $('gantt-previous').onclick=()=>{chartOffset=Math.max(minimumChartOffset(openTasks()),chartOffset-28);renderChart();};
   $('gantt-next').onclick=()=>{chartOffset+=28;renderChart();};
   $('gantt-today').onclick=()=>{chartOffset=-7;renderChart();center();};
   function center(){requestAnimationFrame(()=>{const day=$('chart').querySelector('th.today'),labelWidth=$('chart').querySelector('th')?.offsetWidth||280;if(day){const viewport=$('gantt').getBoundingClientRect(),rect=day.getBoundingClientRect();$('gantt').scrollLeft=Math.max(0,$('gantt').scrollLeft+rect.left+rect.width/2-viewport.left-labelWidth-($('gantt').clientWidth-labelWidth)/2);}});}
