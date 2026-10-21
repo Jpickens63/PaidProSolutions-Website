@@ -64,6 +64,8 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
 
 - `lite-demo.html`: the single PAIDPRO CLIENT LITE shell. Work contains Time Card
   and a scheduled Project Gantt. The Reports tab has been removed.
+  The header displays the running date-based Client Lite version so a deployed
+  browser build can be identified without opening developer tools.
   This browser example uses localStorage, not SQLite.
   Project Gantt shows daily Available and Assigned hours above the dates. Capacity
   defaults to 8 hours Monday-Friday and shares the Task-Manager work calendar.

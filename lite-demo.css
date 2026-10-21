@@ -37,3 +37,5 @@ dialog select { display: block; width: 100%; margin-top: 4px; }
 @media print { html { background: #fff; color-scheme: light; } body { min-height: 100vh; } }
 #context .danger-action { color: #9d1c2b; }
 #context .danger-action:hover:not(:disabled) { color: #71101c; background: #fde8ea; }
+.app-version { margin-left: auto; padding: 5px 9px; border: 1px solid #9eb6ca; border-radius: 999px; background: #f8fbff; color: #526980; font-size: 11px; font-weight: 700; letter-spacing: .04em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+@media (max-width: 750px) { .app-version { margin-left: 0; } }
