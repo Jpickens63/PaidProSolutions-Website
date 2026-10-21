@@ -64,9 +64,12 @@ and keyboard behavior, reduced motion, and content/navigation without JavaScript
 
 - `lite-demo.html`: the single PAIDPRO CLIENT LITE shell. Work contains Time Card
   and a scheduled Project Gantt. The Reports tab has been removed.
-  The header displays the running Client Lite major/minor release (for example,
-  V5.21 means major release 5 and minor release 21) so a deployed browser build
-  can be identified without opening developer tools.
+  The header displays the running Client Lite major/minor release and preview
+  number so a deployed browser build can be identified without opening developer
+  tools. `client-lite-version.json` is the source of truth. The website begins
+  tracked release history at `0.1.0-preview.4`; the verified Windows and Linux
+  installer baseline immediately before it is `0.1.0-preview.3`. Website release
+  commits use scoped Git tags such as `client-lite-v0.1.0-preview.4`.
   This browser example uses localStorage, not SQLite.
   Project Gantt shows daily Available and Assigned hours above the dates. Capacity
   defaults to 8 hours Monday-Friday and shares the Task-Manager work calendar.
